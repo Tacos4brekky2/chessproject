@@ -140,12 +140,11 @@ class Board():
         elif move == 'o-o-o':
             return (self.active_color[0], 0, 0, 0, 0, 0, 30)
         else:
-            return ()
+            return (0, 0, 0, 0, 0, 0, 97)
 
 
     """
     --- Locates the requested piece ---
-    *** movePiece() helper function.
 
     Algorithm:
     - Takes the output tuple from moveStrConvert() as input *(move).
@@ -154,7 +153,7 @@ class Board():
     - Starts from the square that the player wants to move a piece to,
         looks for all pieces of the same type as the one requested that
         can reach this target square using (vectors) and adds their offset 
-        from it to a list *(res).
+        from it to a list *(res).                                   (x, y)
     - In most cases, (res) will have only one element.  If the piece to be moved
         is ambiguous and the length of (res) is greater than one,
         iterate over (res) and prune elements that do not match the
@@ -164,6 +163,10 @@ class Board():
     Functionality:
         - All basic piece moves.
         - Pawn captures.
+        - Returns invalid inputs as empty 
+            tuples to signal a loop continuation.
+        - Passes resignations and draw offers through
+            to break the while loops.
     """
     def moveScan(self,
                  move: tuple):
@@ -180,21 +183,21 @@ class Board():
             'diagonal_2': [(x, -x) for x in range(-7, 8) if x != 0]
         }
         vector_dict = {
-            11: [(1, 1) if self.active_color[0] == 1 else (1, -1),
+            11: [(1, 1) if self.active_color[0] == 1 else (1, -1),      # Pawn capture
                  (-1, 1) if self.active_color[0] == 1 else (-1, -1)],
-            1: [(0, 1) if self.active_color[0] == 1 else (0, -1), 
+            1: [(0, 1) if self.active_color[0] == 1 else (0, -1),       # Pawn
                 (0, 2) if self.active_color[0] == 1 else (0, -2)],
-            2: lines['diagonal_1'] +
+            2: lines['diagonal_1'] +                                    # Bishop
                  lines['diagonal_2'],
-            3: [(1, 2), (-1, 2), (1, -2), (-1, -2), 
+            3: [(1, 2), (-1, 2), (1, -2), (-1, -2),                     # Knight
                 (2, 1), (2, -1), (-2, 1), (-2, -1)],
-            4: lines['horizontal'] + 
+            4: lines['horizontal'] +                                    # Rook
                  lines['vertical'],
-            5: lines['vertical'] +
+            5: lines['vertical'] +                                      # Queen
                  lines['horizontal'] +
                  lines['diagonal_1'] +
                  lines['diagonal_2'],
-            6: [(0, 1), (1, 1), (1, 0), (1, -1), 
+            6: [(0, 1), (1, 1), (1, 0), (1, -1),                        # King
                 (0, -1), (-1, -1), (-1, 0), (-1, 1)]
         }
         if move[6] == 11:
@@ -224,15 +227,15 @@ class Board():
                 (self.board[move[3] - v[1]][move[2] + v[0]] == -move[1])
             ):
                 res.append((-v[0], -v[1]))
-
+        if len(res) == 0:
+            return res
         # Disambiguation pruning.
-        if len(res) > 1:
+        elif len(res) > 1:
             for x in res:
                 if (move[5] != 69) and (abs(x[0]) == move[5]):
                     res.remove(x)
                 if (move[4] != 69) and (abs(x[0]) == move[4]):
                     res.remove(x)
-        print(res[0])
         
         if move[1] in (1, 2, 4, 5):
             if self.checkCollisions(move,
@@ -244,10 +247,9 @@ class Board():
     
 
     """
-    --- Checks a piece's move path for collisions ---
     ** moveScan() helper function.
 
-    Pieces affected:
+    Pieces checked:
         - Pawn
         - Bishop
         - Rook
@@ -259,28 +261,23 @@ class Board():
                         vectors: list,
                         offset: tuple) -> bool:
         path = []
-        if (offset[0] == 0) and (offset[1] < 0): # Up
+        if (offset[0] == 0) and (offset[1] < 0):                                                # Up
             path = [x for x in vectors if (x[0] == 0) and (offset[1] < x[1] < 0)]
-        elif (offset[0] < 0) and (offset[1] < 0): # Right Up
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (offset[1] < x[1] < 0)]
-        elif (offset[0] > 0) and (offset[1] < 0): # Left up
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (offset[1] < x[1] < 0)]
-        elif (offset[0] < 0) and (offset[1] == 0): # Right
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (x[1] == 0)]
-        elif (offset[0] > 0) and (offset[1] == 0): # Left
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (x[1] == 0)]
-        elif (offset[0] < 0) and (offset[1] > 0): # Right Down
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (0 < x[1] < offset[1])]
-        elif (offset[0] > 0) and (offset[1] > 0): # Left Down
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (0 < x[1] < offset[1])]
-        elif (offset[0] == 0) and (offset[1] > 0): # Down
+        elif (offset[0] == 0) and (offset[1] > 0):                                              # Down
             path = [x for x in vectors if (x[0] == 0) and (0 < x[1] < offset[1])]
-        # print('=========')
-        # print(f'Piece: {piece}')
-        # print(f'Vectors: {vectors}')
-        # print(f'Path: {path}')
-        # print(f'Offset: {offset}')
-        # print('\n\n=========')
+        elif (offset[0] < 0) and (offset[1] < 0):                                               # Right Up
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (offset[1] < x[1] < 0)]
+        elif (offset[0] > 0) and (offset[1] < 0):                                               # Left up
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (offset[1] < x[1] < 0)]
+        elif (offset[0] < 0) and (offset[1] == 0):                                              # Right
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (x[1] == 0)]
+        elif (offset[0] > 0) and (offset[1] == 0):                                              # Left
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (x[1] == 0)]
+        elif (offset[0] < 0) and (offset[1] > 0):                                               # Right Down
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (0 < x[1] < offset[1])]
+        elif (offset[0] > 0) and (offset[1] > 0):                                               # Left Down
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (0 < x[1] < offset[1])]
+        
         if self.active_color[0] == 0:
             for x in path:
                 if self.board[move[3] - x[1]][move[2] + x[0]] != 0:
@@ -290,14 +287,4 @@ class Board():
                 if self.board[move[3] + x[1]][move[2] - x[0]] != 0:
                     return True
         return False
-    
-# # Move Piece and set starting square to empty.
-#         if playermove[0] == 0:
-#             self.board[playermove[3]][playermove[2]] = playermove[1]
-#             self.board[playermove[3] - piece_pos[1]][playermove[2] + piece_pos[0]] = 0
-#         elif playermove[0] == 1:
-#             self.board[playermove[3]][playermove[2]] = -playermove[1]
-#             self.board[playermove[3] + piece_pos[1]][playermove[2] - piece_pos[0]] = 0
-
-
 

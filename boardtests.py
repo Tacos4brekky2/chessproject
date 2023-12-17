@@ -20,3 +20,11 @@ Castling rights:
     (Black): Kingside = {Board().can_castle[(1, 'o-o')]} | Queenside = {Board().can_castle[(1, 'o-o-o')]}
 """
 )
+    
+# Fix later: Test blocks for checkCollisions()
+# print('=========')
+# print(f'Piece: {piece}')
+# print(f'Vectors: {vectors}')
+# print(f'Path: {path}')
+# print(f'Offset: {offset}')
+# print('\n\n=========')

@@ -14,25 +14,35 @@ while True:
     if player_turn == 0:
         board.move_number += 1
 
-    print(f'\n======= Move {board.move_number} =======')
-    print(board.board)
-    print(board.active_color[1][player_turn])
+    
 
     while True:
+        os.system('clear')
+        print(f'\n======= Move {board.move_number} =======')
+        print(board.board)
+        print(board.active_color[1][player_turn])
         playermove = board.moveStrConvert(input("Enter a move: "))
-        
-        if board.moveScan(playermove):
+        if playermove is None:
+             continue
+        elif playermove[6] == 97:
+             continue
+        elif board.moveScan(playermove):
+            offset = board.moveScan(playermove)
             break
-        
-    if playermove[6] == 99:
+
+    match playermove[6]:
+        case 99:
             #os.system('clear')
             if board.active_color[0] == 0:
                     print('Winner: Black')
             else:
                     print('Winner: White')
-            break        
+            break
+        case 98:
+            #Draw
+            pass
 
-    board.movePiece(playermove)
+    board.movePiece(playermove, offset)
         
     
     if player_turn == 0:
