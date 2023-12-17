@@ -1,4 +1,4 @@
-from Board import Board
+from Class.Board import Board
 
 # Switchboard
 board_attributes = 0
