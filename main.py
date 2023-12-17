@@ -8,8 +8,9 @@ board = Board(config.starting_position)
 
 
 while True:
-    os.system('clear')
+    #os.system('clear')
     player_turn = board.active_color[0]
+    playermove = tuple()
     if player_turn == 0:
         board.move_number += 1
 
@@ -17,19 +18,21 @@ while True:
     print(board.board)
     print(board.active_color[1][player_turn])
 
-    playermove = ()
-    while playermove == ():
+    while True:
         playermove = board.moveStrConvert(input("Enter a move: "))
-
+        
+        if board.moveScan(playermove):
+            break
+        
     if playermove[6] == 99:
             #os.system('clear')
             if board.active_color[0] == 0:
-                 print('Winner: Black')
+                    print('Winner: Black')
             else:
-                 print('Winner: White')
-            break
-    else:
-        board.movePiece(playermove)
+                    print('Winner: White')
+            break        
+
+    board.movePiece(playermove)
         
     
     if player_turn == 0:

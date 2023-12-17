@@ -1,5 +1,6 @@
 import numpy as np
 import regex as re
+import config
 
 
 class Board():
@@ -64,9 +65,9 @@ class Board():
         - Marks the square previously occupied by said piece as empty.
         - Resets half move clock if no capture has been made.  Increments half move clock otherwise.
     """
-    def movePiece(self, 
-                  playermove: tuple):
-        piece_pos = self.moveScan(playermove)
+    def movePiece(self,
+                  playermove: tuple,
+                  offset: tuple):
 
         if self.board[playermove[3]][playermove[2]] != 0:
             self.fifty_move_count = 0
@@ -76,10 +77,10 @@ class Board():
         # Move Piece and set starting square to empty.
         if playermove[0] == 0:
             self.board[playermove[3]][playermove[2]] = playermove[1]
-            self.board[playermove[3] - piece_pos[1]][playermove[2] + piece_pos[0]] = 0
+            self.board[playermove[3] - offset[1]][playermove[2] + offset[0]] = 0
         elif playermove[0] == 1:
             self.board[playermove[3]][playermove[2]] = -playermove[1]
-            self.board[playermove[3] + piece_pos[1]][playermove[2] - piece_pos[0]] = 0
+            self.board[playermove[3] + offset[1]][playermove[2] - offset[0]] = 0
         
         
     """
@@ -166,6 +167,12 @@ class Board():
     """
     def moveScan(self,
                  move: tuple):
+        if (
+            (move[6] == 99) or
+            (move[6] == 98)
+        ):
+            return move
+        
         lines = {
             'vertical': [(0, x) for x in range(-7, 8) if x != 0],
             'horizontal': [(x, 0) for x in range(-7, 8) if x != 0],
@@ -225,5 +232,72 @@ class Board():
                     res.remove(x)
                 if (move[4] != 69) and (abs(x[0]) == move[4]):
                     res.remove(x)
-                
+        print(res[0])
+        
+        if move[1] in (1, 2, 4, 5):
+            if self.checkCollisions(move,
+                                    move[1],
+                                    vector_dict[move[1]],
+                                    res[0]):
+                return ()
         return res[0]
+    
+
+    """
+    --- Checks a piece's move path for collisions ---
+    ** moveScan() helper function.
+
+    Pieces affected:
+        - Pawn
+        - Bishop
+        - Rook
+        - Queen
+    """
+    def checkCollisions(self,
+                        move: tuple,
+                        piece: str,
+                        vectors: list,
+                        offset: tuple) -> bool:
+        path = []
+        if (offset[0] == 0) and (offset[1] < 0): # Up
+            path = [x for x in vectors if (x[0] == 0) and (offset[1] < x[1] < 0)]
+        elif (offset[0] < 0) and (offset[1] < 0): # Right Up
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (offset[1] < x[1] < 0)]
+        elif (offset[0] > 0) and (offset[1] < 0): # Left up
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (offset[1] < x[1] < 0)]
+        elif (offset[0] < 0) and (offset[1] == 0): # Right
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (x[1] == 0)]
+        elif (offset[0] > 0) and (offset[1] == 0): # Left
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (x[1] == 0)]
+        elif (offset[0] < 0) and (offset[1] > 0): # Right Down
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (0 < x[1] < offset[1])]
+        elif (offset[0] > 0) and (offset[1] > 0): # Left Down
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (0 < x[1] < offset[1])]
+        elif (offset[0] == 0) and (offset[1] > 0): # Down
+            path = [x for x in vectors if (x[0] == 0) and (0 < x[1] < offset[1])]
+        # print('=========')
+        # print(f'Piece: {piece}')
+        # print(f'Vectors: {vectors}')
+        # print(f'Path: {path}')
+        # print(f'Offset: {offset}')
+        # print('\n\n=========')
+        if self.active_color[0] == 0:
+            for x in path:
+                if self.board[move[3] - x[1]][move[2] + x[0]] != 0:
+                    return True
+        else:
+            for x in path:
+                if self.board[move[3] + x[1]][move[2] - x[0]] != 0:
+                    return True
+        return False
+    
+# # Move Piece and set starting square to empty.
+#         if playermove[0] == 0:
+#             self.board[playermove[3]][playermove[2]] = playermove[1]
+#             self.board[playermove[3] - piece_pos[1]][playermove[2] + piece_pos[0]] = 0
+#         elif playermove[0] == 1:
+#             self.board[playermove[3]][playermove[2]] = -playermove[1]
+#             self.board[playermove[3] + piece_pos[1]][playermove[2] - piece_pos[0]] = 0
+
+
+
