@@ -1,52 +1,41 @@
-from Class.Board import Board
-import boardtests
-import config
-import os
+import pygame
+from pygame.locals import *
+ 
+class App:
+    def __init__(self):
+        self._running = True
+        self._display_surf = None
+        self.resolution = self.width, self.height = 640, 400
+ 
+    def on_init(self):
+        pygame.init()
+        self._display_surf = pygame.display.set_mode(self.resolution, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self._running = True
+ 
+    def on_event(self, event):
+        if event.type == pygame.QUIT:
+            self._running = False
+    def on_loop(self):
+        pass
+    def render(self):
+        pygame.display.update()
+    def cleanup(self):
+        pygame.quit()
+ 
+    def main(self):
+        if self.on_init() == False:
+            self._running = False
 
+        # Event handler
+        while self._running:
+            for event in pygame.event.get():
+                self.on_event(event)
 
-board = Board(config.starting_position)
+            self.on_loop()
+            self.render()
 
+        self.cleanup()
+ 
 
-while True:
-    #os.system('clear')
-    player_turn = board.active_color[0]
-    playermove = tuple()
-    if player_turn == 0:
-        board.move_number += 1
-
-    
-
-    while True:
-        os.system('clear')
-        print(f'\n======= Move {board.move_number} =======')
-        print(board.board)
-        print(board.active_color[1][player_turn])
-        playermove = board.moveStrConvert(input("Enter a move: "))
-        if playermove is None:
-             continue
-        elif playermove[6] == 97:
-             continue
-        elif board.moveScan(playermove):
-            offset = board.moveScan(playermove)
-            break
-
-    match playermove[6]:
-        case 99:
-            #os.system('clear')
-            if board.active_color[0] == 0:
-                    print('Winner: Black')
-            else:
-                    print('Winner: White')
-            break
-        case 98:
-            #Draw
-            pass
-
-    board.movePiece(playermove, offset)
-        
-    
-    if player_turn == 0:
-        board.active_color[0] = 1
-    else:
-        board.active_color[0] = 0
-
+if __name__ == "__main__" :
+    App().main()
