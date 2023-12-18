@@ -8,7 +8,6 @@ board = Board(config.starting_position)
 
 
 while True:
-    #os.system('clear')
     player_turn = board.active_color[0]
     playermove = tuple()
     if player_turn == 0:

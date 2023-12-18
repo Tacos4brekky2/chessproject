@@ -287,4 +287,10 @@ class Board():
                 if self.board[move[3] + x[1]][move[2] - x[0]] != 0:
                     return True
         return False
+    
+    def changeColor(self):
+        pass
+
+    def incrementMove(self):
+        pass
 
