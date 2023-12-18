@@ -69,10 +69,7 @@ class Board():
                   playermove: tuple,
                   offset: tuple):
 
-        if self.board[playermove[3]][playermove[2]] != 0:
-            self.fifty_move_count = 0
-        else:
-            self.fifty_move_count += 1
+        self.incrementFiftyMoveCounter(playermove)
 
         # Move Piece and set starting square to empty.
         if playermove[0] == 0:
@@ -81,6 +78,9 @@ class Board():
         elif playermove[0] == 1:
             self.board[playermove[3]][playermove[2]] = -playermove[1]
             self.board[playermove[3] + offset[1]][playermove[2] - offset[0]] = 0
+        
+        self.changeColor()
+        self.incrementMove()
         
         
     """
@@ -289,8 +289,19 @@ class Board():
         return False
     
     def changeColor(self):
-        pass
+        if self.active_color[0] == 0:
+            self.active_color[0] == 1
+        else:
+            self.active_color[0] == 0
 
     def incrementMove(self):
-        pass
+        if self.active_color[0] == 1:
+            self.move_number += 1
+
+    def incrementFiftyMoveCounter(self,
+                              playermove: tuple):
+        if self.board[playermove[3]][playermove[2]] != 0:
+            self.fifty_move_count = 0
+        else:
+            self.fifty_move_count += 1
 

@@ -10,10 +10,6 @@ board = Board(config.starting_position)
 while True:
     player_turn = board.active_color[0]
     playermove = tuple()
-    if player_turn == 0:
-        board.move_number += 1
-
-    
 
     while True:
         os.system('clear')
@@ -42,10 +38,4 @@ while True:
             pass
 
     board.movePiece(playermove, offset)
-        
-    
-    if player_turn == 0:
-        board.active_color[0] = 1
-    else:
-        board.active_color[0] = 0
 
