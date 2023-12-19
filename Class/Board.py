@@ -83,7 +83,14 @@ class Board():
         self.changeColor()
         self.incrementMove()
         
+    
+    def indexToMove(self,
+                    initial: list,
+                    target: list
+                    ) -> tuple:
+        pass
         
+
     """
     --- Standardizes algebraic notation inputs for use in the program ---
     ** Base function
