@@ -101,12 +101,12 @@ class King(pygame.sprite.Sprite):
 class Board(pygame.sprite.Sprite):
     def __init__(self,
                  skin: str,
-                 x = 0,
-                 y = 0):
+                 x = st.L_PAD,
+                 y = st.U_PAD):
         super().__init__()
         match skin:
             case 'tarzan':
                 image = st.board_skin_tarzan
-        self.image = pygame.transform.scale(image, st.SCREEN)
+        self.image = pygame.transform.scale(image, (st.WIDTH - st.L_PAD - st.R_PAD, st.HEIGHT - st.U_PAD - st.D_PAD))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)

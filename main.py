@@ -20,7 +20,6 @@ class App:
 
             for event in pygame.event.get():
                 self.onEvent(event)
-            #self.playerTurn()
             self.onLoop()
             self.render()
 
@@ -40,7 +39,6 @@ class App:
         pass
 
     def render(self):
-        #print('=======================')
         piece_sprites = pygame.sprite.Group()
         board_render = sprites.Board('tarzan')
         piece_sprites.add(board_render)
@@ -51,9 +49,7 @@ class App:
                 else:
                     coords = self.getSquareCoordinates(1, (j, i))
                     render = self.getPiece(piece, coords)
-                    #print(f'PIECE: {piece}\nCOORDS: {coords}')
                     piece_sprites.add(render)
-        #print('=======================')
         piece_sprites.draw(self.screen)
         text_in = pygame.rect.Rect(300, 300, 100, 50)
         pygame.key.set_text_input_rect(text_in)
@@ -64,7 +60,7 @@ class App:
     
     def getSquareCoordinates(
             self,
-            input_type: int,            # 0 = string tuple(('a', 3)) -> coords((0, )), 1 = index((0, 2))
+            input_type: int,            # 0 = tuple(('a', 3)) -> coords((0, 375)), 1 = index((0, 2)) -> coords ((0, 450))
             square: tuple, 
             files = st.FILE_LETTERS, 
             ranks = st.RANK_INDEX,
@@ -74,8 +70,8 @@ class App:
             return ((files[square[0]] * cell_size) - 5, 
                     (ranks[square[1]] * cell_size) - 10)
         elif input_type == 1:
-            return ((square[0] * cell_size) - 5, 
-                    (square[1] * cell_size) - 10)
+            return (st.L_PAD + (square[0] * cell_size) - 5, 
+                    st.U_PAD + (square[1] * cell_size) - 10)
 
     def getPiece(self,
                  piece_number: int,
