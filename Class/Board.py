@@ -291,9 +291,9 @@ class Board():
     
     def changeColor(self):
         if self.active_color[0] == 0:
-            self.active_color[0] == 1
+            self.active_color[0] = 1
         else:
-            self.active_color[0] == 0
+            self.active_color[0] = 0
 
     def incrementMove(self):
         if self.active_color[0] == 1:

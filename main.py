@@ -1,6 +1,7 @@
 import pygame
+import os
 from pygame.locals import *
-import config
+import config as cf
 import setup as st
 import Class.Sprites as sprites
 import Class.Board as brd
@@ -9,7 +10,7 @@ class App:
     def __init__(self):
         self._running = True
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.state = brd.Board()
+        self.state = brd.Board(cf.starting_position)
         self.perspective = 0            # White = 0, Black = 1
         print(self.state.board)
  
@@ -18,9 +19,9 @@ class App:
         while self._running:
 
             for event in pygame.event.get():
-                self.on_event(event)
-
-            self.on_loop()
+                self.onEvent(event)
+            #self.playerTurn()
+            self.onLoop()
             self.render()
 
         self.cleanup()
@@ -28,42 +29,53 @@ class App:
     def cleanup(self):
         pygame.quit()
  
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
+    def onEvent(self, event):
+        match event.type:
+            case pygame.QUIT:
+                self._running = False
 
-    def on_loop(self):
+        
+
+    def onLoop(self):
         pass
 
     def render(self):
+        #print('=======================')
         piece_sprites = pygame.sprite.Group()
         board_render = sprites.Board('tarzan')
         piece_sprites.add(board_render)
-        for i, r in enumerate(self.state.board):
-            for j, f in enumerate(r):
-                if f == 0:
+        for i, rank in enumerate(self.state.board):
+            for j, piece in enumerate(rank):
+                if piece == 0:
                     continue
                 else:
                     coords = self.getSquareCoordinates(1, (j, i))
-                    render = self.getPiece(-f, coords)
+                    render = self.getPiece(piece, coords)
+                    #print(f'PIECE: {piece}\nCOORDS: {coords}')
                     piece_sprites.add(render)
+        #print('=======================')
         piece_sprites.draw(self.screen)
+        text_in = pygame.rect.Rect(300, 300, 100, 50)
+        pygame.key.set_text_input_rect(text_in)
+        pygame.draw.rect(self.screen, st.WHITE, text_in)
 
         pygame.display.update()
     
     
     def getSquareCoordinates(
             self,
-            input_type: int,            # 0 = string tuple(('a', 3)) -> coords, 1 = index((0, 2))
+            input_type: int,            # 0 = string tuple(('a', 3)) -> coords((0, )), 1 = index((0, 2))
             square: tuple, 
             files = st.FILE_LETTERS, 
             ranks = st.RANK_INDEX,
             cell_size = st.CELL_SIZE
     ) -> tuple:
         if input_type == 0:
-            return ((files[square[0]] * cell_size) - 5, (ranks[square[1]] * cell_size) - 10)
+            return ((files[square[0]] * cell_size) - 5, 
+                    (ranks[square[1]] * cell_size) - 10)
         elif input_type == 1:
-            return ((square[0] * cell_size) - 5, (ranks[square[1] + 1] * cell_size) - 10)
+            return ((square[0] * cell_size) - 5, 
+                    (square[1] * cell_size) - 10)
 
     def getPiece(self,
                  piece_number: int,
@@ -83,6 +95,39 @@ class App:
             6: sprites.King(0, position)
         }
         return piece_dict[piece_number]
+    
+    def playerTurn(self):
+        turn = True
+        playermove = tuple()
+        while turn:
+            os.system('clear')
+            print(f'\n======= Move {self.state.move_number} =======')
+            print(self.state.board)
+            print(self.state.active_color[1][self.state.active_color[0]])
+            playermove = self.state.moveStrConvert(input("Enter a move: "))
+            if playermove is None:
+                continue
+            elif playermove[6] == 97:
+                continue
+            elif self.state.moveScan(playermove):
+                offset = self.state.moveScan(playermove)
+                break
+
+        match playermove[6]:
+            case 99:
+                #os.system('clear')
+                if self.state.active_color[0] == 0:
+                        print('Winner: Black')
+                else:
+                        print('Winner: White')
+            case 98:
+                #Draw
+                pass
+
+        self.state.movePiece(playermove, offset)
+
+
+
 
 
 if __name__ == "__main__" :

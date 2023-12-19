@@ -6,8 +6,7 @@ import os
 
 board = Board(config.starting_position)
 
-
-while True:
+def playerTurn():
     player_turn = board.active_color[0]
     playermove = tuple()
 
@@ -32,7 +31,6 @@ while True:
                     print('Winner: Black')
             else:
                     print('Winner: White')
-            break
         case 98:
             #Draw
             pass
