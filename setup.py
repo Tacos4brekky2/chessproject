@@ -2,10 +2,10 @@ import pygame
 
 FPS = 60
 
-L_PAD = 50
-R_PAD = 50
-U_PAD = 50
-D_PAD = 50
+L_PAD = 0
+R_PAD = 0
+U_PAD = 0
+D_PAD = 0
 
 WIDTH = 600 + L_PAD + R_PAD
 HEIGHT = 600 + U_PAD + D_PAD

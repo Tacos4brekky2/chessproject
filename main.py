@@ -11,7 +11,9 @@ class App:
         self._running = True
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.state = brd.Board(cf.starting_position)
-        self.perspective = 0            # White = 0, Black = 1
+        self.initial_square = []
+        self.target_square = []
+        self.perspective = 0           # White = 0, Black = 1
         print(self.state.board)
  
     def main(self):
@@ -19,6 +21,7 @@ class App:
         while self._running:
 
             for event in pygame.event.get():
+                #print(event)
                 self.onEvent(event)
             self.onLoop()
             self.render()
@@ -32,8 +35,29 @@ class App:
         match event.type:
             case pygame.QUIT:
                 self._running = False
+            case pygame.MOUSEBUTTONUP:
+                if len(self.initial_square) == 0:
+                    self.initial_square = self.getClickedSquare(pygame.mouse.get_pos())
+                else:
+                    self.target_square = self.getClickedSquare(pygame.mouse.get_pos())
+                    print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}')
+                    self.initial_square = []
+                    self.target_square = []
 
-        
+    """
+    Returns the board index of a square that was clicked.
+    """
+    def getClickedSquare(self, 
+                   pos: tuple
+                   ) -> list:
+        res = list()
+        for x_range in st.SQUARE_BOUNDARIES_X:
+            if x_range[0] <= pos[0] <= x_range[1]:
+                res.append(st.SQUARE_BOUNDARIES_X[x_range])
+        for y_range in st.SQUARE_BOUNDARIES_Y:
+            if y_range[0] <= pos[1] <= y_range[1]:
+                res.append(st.SQUARE_BOUNDARIES_Y[y_range])
+        return res
 
     def onLoop(self):
         pass
@@ -48,12 +72,9 @@ class App:
                     continue
                 else:
                     coords = self.getSquareCoordinates(1, (j, i))
-                    render = self.getPiece(piece, coords)
+                    render = self.getPieceSprite(piece, coords)
                     piece_sprites.add(render)
         piece_sprites.draw(self.screen)
-        text_in = pygame.rect.Rect(300, 300, 100, 50)
-        pygame.key.set_text_input_rect(text_in)
-        pygame.draw.rect(self.screen, st.WHITE, text_in)
 
         pygame.display.update()
     
@@ -73,7 +94,7 @@ class App:
             return (st.L_PAD + (square[0] * cell_size) - 5, 
                     st.U_PAD + (square[1] * cell_size) - 10)
 
-    def getPiece(self,
+    def getPieceSprite(self,
                  piece_number: int,
                  position: tuple):
         piece_dict = {
