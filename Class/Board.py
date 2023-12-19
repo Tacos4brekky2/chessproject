@@ -83,12 +83,30 @@ class Board():
         self.changeColor()
         self.incrementMove()
         
-    
+    """
+    --- Converts initial and target move squares to a move tuple ---
+
+    Output -> move(tuple(int))
+        Index   Meaning
+        0       white/black (0/1)
+        1       piece number
+        2       initial rank
+        3       initial file
+        4       target rank
+        5       target file
+    """
     def indexToMove(self,
                     initial: list,
                     target: list
                     ) -> tuple:
-        pass
+        return (
+            self.active_color[0], 
+            self.board[initial[0]][initial[1]],
+            initial[0],
+            initial[1],
+            target[0],
+            target[1]
+            )
         
 
     """
@@ -112,7 +130,7 @@ class Board():
 
     Output -> move(tuple(int)):
         Index   Meaning
-        0       white/black (1/0) 
+        0       white/black (0/1) 
         1       piece 
         2       file 
         3       rank 

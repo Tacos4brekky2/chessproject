@@ -44,6 +44,7 @@ class App:
                     square = self.getClickedSquare(pygame.mouse.get_pos())
                     self.target_square = [square[1], square[0]]
                     print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}')
+                    print(self.state.indexToMove(self.initial_square, self.target_square))
                     self.initial_square = []
                     self.target_square = []
 
@@ -58,10 +59,10 @@ class App:
         res = [-1, -1]
         for x_range in st.SQUARE_BOUNDARIES_X:
             if x_range[0] <= pos[0] <= x_range[1]:
-                res[1] = (st.SQUARE_BOUNDARIES_X[x_range])
+                res[0] = (st.SQUARE_BOUNDARIES_X[x_range])
         for y_range in st.SQUARE_BOUNDARIES_Y:
             if y_range[0] <= pos[1] <= y_range[1]:
-                res[0] = (st.SQUARE_BOUNDARIES_Y[y_range])
+                res[1] = (st.SQUARE_BOUNDARIES_Y[y_range])
         return res
 
     def onLoop(self):
