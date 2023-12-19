@@ -8,10 +8,26 @@ class Board():
     def __init__(self, 
                  fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.position = re.split('[/ ]', fen)
-        self.move_number = int(self.position[12]) - 1
-        self.fifty_move_count = int(self.position[11])
         self.active_color = [0 if self.position[8] == 'w' else 1, 
                             {0: "White's Turn", 1: "Black's Turn"}]
+        self.offsets = {
+            -1: [(0, -1), (0, -2), (-1, -1), (1, -1)],          # Black Pawn
+            1: [(0, 1), (0, 2), (1, 1), (-1, 1)],               # White Pawn
+            2: [(x, x) for x in range(-7, 8) if x != 0] +       # Bishop
+                 [(x, -x) for x in range(-7, 8) if x != 0],
+            3: [(1, 2), (-1, 2), (1, -2), (-1, -2),             # Knight
+                (2, 1), (2, -1), (-2, 1), (-2, -1)],
+            4: [(x, 0) for x in range(-7, 8) if x != 0] +       # Rook
+                [(0, x) for x in range(-7, 8) if x != 0],
+            5: [(0, x) for x in range(-7, 8) if x != 0] +       # Queen
+                 [(x, 0) for x in range(-7, 8) if x != 0] +
+                 [(x, x) for x in range(-7, 8) if x != 0] +
+                 [(x, -x) for x in range(-7, 8) if x != 0],
+            6: [(0, 1), (1, 1), (1, 0), (1, -1),                # King
+                (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+        }
+        self.move_number = int(self.position[12]) - 1
+        self.fifty_move_count = int(self.position[11])
         self.can_castle = {(0, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
                            (0, 'o-o-o'): True if 'Q' in self.position[9] else False,     # White queenside
                            (1, 'o-o'): True if 'k' in self.position[9] else False,       # Black kingside
@@ -67,19 +83,18 @@ class Board():
         - Resets half move clock if no capture has been made.  Increments half move clock otherwise.
     """
 
-    """"""
-    def movePiece(self,
-                playermove: tuple
-                ):
 
-        self.incrementFiftyMoveCounter(playermove)
-
-        # Move Piece and set starting square to empty.
-        self.board[playermove[4]][playermove[5]] = playermove[1]
-        self.board[playermove[2]][playermove[3]] = 0
-        
-        self.changeColor()
-        self.incrementMove()
+    def movePiece(
+            self,
+            move: tuple
+    ):
+        if self.isValidMove(move):
+            self.board[move[4]][move[5]] = move[1]
+            self.board[move[2]][move[3]] = 0
+            self.changeColor()
+            self.incrementFiftyMoveCounter(move)
+            self.incrementMove()
+     
         
     """
     *** OUTPUTS NEW MOVE TUPLE FORMAT ***
@@ -109,9 +124,93 @@ class Board():
             target[0],
             target[1]
             )
-        
+    
 
     """
+    - offset is the change in (x, y) position from a piece's starting square
+        to its target square.
+    - offset is viewed from white's perspective to make checking and visualizing 
+        move vectors much easier.
+    """
+    def isValidMove(self,
+                    move: tuple) -> bool:
+        if (
+            ((move[0] == 0) and (move[1] < 0)) or
+            ((move[0] == 1) and (move[1] > 0))
+        ):
+            return False
+        offset = (move[5] - move[3], move[2] - move[4])
+        offset_key = abs(move[1]) if move[1] != -1 else -1
+        print(offset_key)
+        for v in self.offsets[offset_key]:
+            print(v)
+            if v == offset:
+                if abs(move[1]) in [3, -1]:
+                    return True
+                return self.checkCollisions(move, self.offsets[offset_key], v)
+        return False
+    
+
+    """
+    ** isValidMove() helper function.
+
+    Returns True if no collisions are detected.
+
+    Pieces checked:
+        - Pawn
+        - Bishop
+        - Rook
+        - Queen
+    """
+    def checkCollisions(self,
+                        move: tuple,
+                        vectors: list,
+                        offset: tuple) -> bool:
+        path = []
+        if (offset[0] == 0) and (offset[1] < 0):                                                # Up
+            path = [x for x in vectors if (x[0] == 0) and (offset[1] < x[1] < 0)]
+        elif (offset[0] == 0) and (offset[1] > 0):                                              # Down
+            path = [x for x in vectors if (x[0] == 0) and (0 < x[1] < offset[1])]
+        elif (offset[0] < 0) and (offset[1] < 0):                                               # Right Up
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (offset[1] < x[1] < 0)]
+        elif (offset[0] > 0) and (offset[1] < 0):                                               # Left up
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (offset[1] < x[1] < 0)]
+        elif (offset[0] < 0) and (offset[1] == 0):                                              # Right
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (x[1] == 0)]
+        elif (offset[0] > 0) and (offset[1] == 0):                                              # Left
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (x[1] == 0)]
+        elif (offset[0] < 0) and (offset[1] > 0):                                               # Right Down
+            path = [x for x in vectors if (offset[0] < x[0] < 0) and (0 < x[1] < offset[1])]
+        elif (offset[0] > 0) and (offset[1] > 0):                                               # Left Down
+            path = [x for x in vectors if (0 < x[0] < offset[0]) and (0 < x[1] < offset[1])]
+        
+        for x in path:
+            if self.board[move[2] - x[1]][move[3] + x[0]] != 0:
+                return False
+        return True
+    
+
+    def changeColor(self):
+        if self.active_color[0] == 0:
+            self.active_color[0] = 1
+        else:
+            self.active_color[0] = 0
+
+
+    def incrementMove(self):
+        if self.active_color[0] == 1:
+            self.move_number += 1
+
+
+    def incrementFiftyMoveCounter(self,
+                              playermove: tuple):
+        if self.board[playermove[4]][playermove[5]] != 0:
+            self.fifty_move_count = 0
+        else:
+            self.fifty_move_count += 1
+
+    """
+    *** NOT IN USE ***
     *** OUTPUTS OLD MOVE TUPLE FORMAT ***
 
     --- Standardizes algebraic notation inputs for use in the program ---
@@ -173,166 +272,5 @@ class Board():
             return (0, 0, 0, 0, 0, 0, 97)
 
 
-    """
-    --- Locates the requested piece ---
-
-    Algorithm:
-    - Takes the output tuple from moveStrConvert() as input *(move).
-    - Determines which list of move vectors to use based on the type
-        of piece specified in (move) and assigns the list to *(vectors).
-    - Starts from the square that the player wants to move a piece to,
-        looks for all pieces of the same type as the one requested that
-        can reach this target square using (vectors) and adds their offset 
-        from it to a list *(res).                                   (x, y)
-    - In most cases, (res) will have only one element.  If the piece to be moved
-        is ambiguous and the length of (res) is greater than one,
-        iterate over (res) and prune elements that do not match the
-        disambiguation flags provided in (move[4]) and/or (move[5]).
-    - Res will have exactly one element, which is then returned.
-
-    Functionality:
-        - All basic piece moves.
-        - Pawn captures.
-        - Returns invalid inputs as empty 
-            tuples to signal a loop continuation.
-        - Passes resignations and draw offers through
-            to break the while loops.
-    """
-    def moveScan(self,
-                 move: tuple):
-        if (
-            (move[6] == 99) or
-            (move[6] == 98)
-        ):
-            return move
-        
-        lines = {
-            'vertical': [(0, x) for x in range(-7, 8) if x != 0],
-            'horizontal': [(x, 0) for x in range(-7, 8) if x != 0],
-            'diagonal_1': [(x, x) for x in range(-7, 8) if x != 0],
-            'diagonal_2': [(x, -x) for x in range(-7, 8) if x != 0]
-        }
-        vector_dict = {
-            11: [(1, 1) if self.active_color[0] == 1 else (1, -1),      # Pawn capture
-                 (-1, 1) if self.active_color[0] == 1 else (-1, -1)],
-            1: [(0, 1) if self.active_color[0] == 1 else (0, -1),       # Pawn
-                (0, 2) if self.active_color[0] == 1 else (0, -2)],
-            2: lines['diagonal_1'] +                                    # Bishop
-                 lines['diagonal_2'],
-            3: [(1, 2), (-1, 2), (1, -2), (-1, -2),                     # Knight
-                (2, 1), (2, -1), (-2, 1), (-2, -1)],
-            4: lines['horizontal'] +                                    # Rook
-                 lines['vertical'],
-            5: lines['vertical'] +                                      # Queen
-                 lines['horizontal'] +
-                 lines['diagonal_1'] +
-                 lines['diagonal_2'],
-            6: [(0, 1), (1, 1), (1, 0), (1, -1),                        # King
-                (0, -1), (-1, -1), (-1, 0), (-1, 1)]
-        }
-        if move[6] == 11:
-            vectors = vector_dict[11]
-        else:
-            vectors = vector_dict[move[1]]
-
-        res = []
-        for v in vectors:
-            # Ignore moves that place pieces off of the board.
-            if (
-                (v[0] > 0 and move[2] + v[0] > 7) or 
-                (v[0] < 0 and move[2] + v[0] < 0) or 
-                (v[1] > 0 and move[3] - v[1] < 0) or 
-                (v[1] < 0 and move[3] - v[1] > 7)
-            ):
-                continue
-
-            # Scan for requested piece from destination square.
-            elif (
-                (move[0] == 0) and
-                (self.board[move[3] - v[1]][move[2] + v[0]] == move[1])
-            ):
-                res.append((v[0], v[1]))
-            elif (
-                (move[0] == 1) and
-                (self.board[move[3] - v[1]][move[2] + v[0]] == -move[1])
-            ):
-                res.append((-v[0], -v[1]))
-        if len(res) == 0:
-            return res
-        # Disambiguation pruning.
-        elif len(res) > 1:
-            for x in res:
-                if (move[5] != 69) and (abs(x[0]) == move[5]):
-                    res.remove(x)
-                if (move[4] != 69) and (abs(x[0]) == move[4]):
-                    res.remove(x)
-        
-        if move[1] in (1, 2, 4, 5):
-            if self.checkCollisions(move,
-                                    move[1],
-                                    vector_dict[move[1]],
-                                    res[0]):
-                return ()
-        return res[0]
-    
-
-    """
-    ** moveScan() helper function.
-
-    Pieces checked:
-        - Pawn
-        - Bishop
-        - Rook
-        - Queen
-    """
-    def checkCollisions(self,
-                        move: tuple,
-                        piece: str,
-                        vectors: list,
-                        offset: tuple) -> bool:
-        path = []
-        if (offset[0] == 0) and (offset[1] < 0):                                                # Up
-            path = [x for x in vectors if (x[0] == 0) and (offset[1] < x[1] < 0)]
-        elif (offset[0] == 0) and (offset[1] > 0):                                              # Down
-            path = [x for x in vectors if (x[0] == 0) and (0 < x[1] < offset[1])]
-        elif (offset[0] < 0) and (offset[1] < 0):                                               # Right Up
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (offset[1] < x[1] < 0)]
-        elif (offset[0] > 0) and (offset[1] < 0):                                               # Left up
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (offset[1] < x[1] < 0)]
-        elif (offset[0] < 0) and (offset[1] == 0):                                              # Right
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (x[1] == 0)]
-        elif (offset[0] > 0) and (offset[1] == 0):                                              # Left
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (x[1] == 0)]
-        elif (offset[0] < 0) and (offset[1] > 0):                                               # Right Down
-            path = [x for x in vectors if (offset[0] < x[0] < 0) and (0 < x[1] < offset[1])]
-        elif (offset[0] > 0) and (offset[1] > 0):                                               # Left Down
-            path = [x for x in vectors if (0 < x[0] < offset[0]) and (0 < x[1] < offset[1])]
-        
-        if self.active_color[0] == 0:
-            for x in path:
-                if self.board[move[3] - x[1]][move[2] + x[0]] != 0:
-                    return True
-        else:
-            for x in path:
-                if self.board[move[3] + x[1]][move[2] - x[0]] != 0:
-                    return True
-        return False
-    
-    def changeColor(self):
-        if self.active_color[0] == 0:
-            self.active_color[0] = 1
-        else:
-            self.active_color[0] = 0
-
-    def incrementMove(self):
-        if self.active_color[0] == 1:
-            self.move_number += 1
-
-    def incrementFiftyMoveCounter(self,
-                              playermove: tuple):
-        if self.board[playermove[4]][playermove[5]] != 0:
-            self.fifty_move_count = 0
-        else:
-            self.fifty_move_count += 1
 
 
