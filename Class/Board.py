@@ -66,23 +66,8 @@ class Board():
         - Marks the square previously occupied by said piece as empty.
         - Resets half move clock if no capture has been made.  Increments half move clock otherwise.
     """
-    # def movePiece(self,
-    #               playermove: tuple,
-    #               offset: tuple):
 
-    #     self.incrementFiftyMoveCounter(playermove)
-
-    #     # Move Piece and set starting square to empty.
-    #     if playermove[0] == 0:
-    #         self.board[playermove[3]][playermove[2]] = playermove[1]
-    #         self.board[playermove[3] - offset[1]][playermove[2] + offset[0]] = 0
-    #     elif playermove[0] == 1:
-    #         self.board[playermove[3]][playermove[2]] = -playermove[1]
-    #         self.board[playermove[3] + offset[1]][playermove[2] - offset[0]] = 0
-        
-    #     self.changeColor()
-    #     self.incrementMove()
-
+    """"""
     def movePiece(self,
                 playermove: tuple
                 ):
@@ -97,8 +82,12 @@ class Board():
         self.incrementMove()
         
     """
+    *** OUTPUTS NEW MOVE TUPLE FORMAT ***
     --- Converts initial and target move squares to a move tuple ---
-
+    Input:
+        - initial = [initial rank index, initial file index]
+        - target = [target rank index, target file index]
+    
     Output -> move(tuple(int))
         Index   Meaning
         0       white/black (0/1)
@@ -123,6 +112,8 @@ class Board():
         
 
     """
+    *** OUTPUTS OLD MOVE TUPLE FORMAT ***
+
     --- Standardizes algebraic notation inputs for use in the program ---
     ** Base function
 
