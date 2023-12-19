@@ -66,19 +66,32 @@ class Board():
         - Marks the square previously occupied by said piece as empty.
         - Resets half move clock if no capture has been made.  Increments half move clock otherwise.
     """
+    # def movePiece(self,
+    #               playermove: tuple,
+    #               offset: tuple):
+
+    #     self.incrementFiftyMoveCounter(playermove)
+
+    #     # Move Piece and set starting square to empty.
+    #     if playermove[0] == 0:
+    #         self.board[playermove[3]][playermove[2]] = playermove[1]
+    #         self.board[playermove[3] - offset[1]][playermove[2] + offset[0]] = 0
+    #     elif playermove[0] == 1:
+    #         self.board[playermove[3]][playermove[2]] = -playermove[1]
+    #         self.board[playermove[3] + offset[1]][playermove[2] - offset[0]] = 0
+        
+    #     self.changeColor()
+    #     self.incrementMove()
+
     def movePiece(self,
-                  playermove: tuple,
-                  offset: tuple):
+                playermove: tuple
+                ):
 
         self.incrementFiftyMoveCounter(playermove)
 
         # Move Piece and set starting square to empty.
-        if playermove[0] == 0:
-            self.board[playermove[3]][playermove[2]] = playermove[1]
-            self.board[playermove[3] - offset[1]][playermove[2] + offset[0]] = 0
-        elif playermove[0] == 1:
-            self.board[playermove[3]][playermove[2]] = -playermove[1]
-            self.board[playermove[3] + offset[1]][playermove[2] - offset[0]] = 0
+        self.board[playermove[4]][playermove[5]] = playermove[1]
+        self.board[playermove[2]][playermove[3]] = 0
         
         self.changeColor()
         self.incrementMove()
@@ -326,7 +339,7 @@ class Board():
 
     def incrementFiftyMoveCounter(self,
                               playermove: tuple):
-        if self.board[playermove[3]][playermove[2]] != 0:
+        if self.board[playermove[4]][playermove[5]] != 0:
             self.fifty_move_count = 0
         else:
             self.fifty_move_count += 1

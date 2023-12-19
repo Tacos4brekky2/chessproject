@@ -13,6 +13,7 @@ class App:
         self.state = brd.Board(cf.starting_position)
         self.initial_square = []
         self.target_square = []
+        self.move_tuple = ()
         self.perspective = 0           # White = 0, Black = 1
         print(self.state.board)
  
@@ -43,10 +44,13 @@ class App:
                 else:
                     square = self.getClickedSquare(pygame.mouse.get_pos())
                     self.target_square = [square[1], square[0]]
-                    print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}')
-                    print(self.state.indexToMove(self.initial_square, self.target_square))
+                    self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
+                    self.state.movePiece(self.move_tuple)
+                    print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
                     self.initial_square = []
                     self.target_square = []
+                    self.move_tuple = ()
+                    print(f'{self.state.active_color[1][self.state.active_color[0]]}')
 
     """
     Returns the board index of a square that was clicked.
