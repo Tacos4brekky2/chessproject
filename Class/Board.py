@@ -1,6 +1,7 @@
 import numpy as np
 import regex as re
 import config
+import setup as st
 
 
 class Board():
@@ -304,4 +305,5 @@ class Board():
             self.fifty_move_count = 0
         else:
             self.fifty_move_count += 1
+
 
