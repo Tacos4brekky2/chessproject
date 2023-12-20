@@ -116,25 +116,41 @@ class Board():
     def movePiece(
             self,
             move: tuple
-    ):
+    ) -> None:
+        king_x = self.king_pos[move[0]][1]
+        king_y = self.king_pos[move[0]][0]
         os.system('clear')
+        #print(f'KING POS: {self.king_pos[move[0]]}')
+        #print(self.checkScan(self.active_color[0], king_x, king_y))
         if self.isValidMove(move):
+            tmp = self.board[move[4]][move[5]]
+            tmp_king_pos = [king_y, king_x]
             self.board[move[4]][move[5]] = move[1]
             self.board[move[2]][move[3]] = 0
             if abs(move[1]) == 6:
-                self.king_pos[self.active_color[0]] = [move[4], move[5]]
-            self.changeColor()
-            print(f'''
+                king_x = move[5]
+                king_y = move[4]
+            if self.checkScan(move[0], king_x, king_y):
+                self.board[move[4]][move[5]] = tmp
+                self.board[move[2]][move[3]] = move[1]
+                self.king_pos[move[0]] = tmp_king_pos
+            else:
+                if abs(move[1]) == 6:
+                    self.king_pos[move[0]] = [move[4], move[5]]
+                self.in_check[move[0]] = 0
+                if self.checkScan(self.opposite_color[move[0]], self.king_pos[self.opposite_color[move[0]]][1], self.king_pos[self.opposite_color[move[0]]][0]):
+                    self.in_check[self.opposite_color[move[0]]] = 1
+                self.changeColor()
+                print(f'''
 ===== Board.movePiece() =====
 WHITE KING POS (Ri, Fi): {self.king_pos[0]}
 BLACK KING POS (Ri, Fi): {self.king_pos[1]}
-TURN: {self.active_color[1][self.active_color[0]]}
+TURN: {self.active_color[1][move[0]]}
 MOVE: {move}
 ===========================
             ''')
-            self.incrementFiftyMoveCounter(move)
-            self.incrementMove()
-            print(self.checkScan(self.active_color[0]))
+                self.incrementFiftyMoveCounter(move)
+                self.incrementMove()
 
 
     """
@@ -165,6 +181,7 @@ MOVE: {move}
             target[0],
             target[1]
             )
+    
     
 
     """
@@ -242,13 +259,10 @@ MOVE: {move}
     
 # TESTED: Works with all pieces from every direction.
     def checkScan(self,
-                  color: int) -> bool:
-        if color == 0:
-            king_x = self.king_pos[0][1]
-            king_y = self.king_pos[0][0]
-        else:
-            king_x = self.king_pos[1][1]
-            king_y = self.king_pos[1][0]
+                  color: int,
+                  king_x: list,
+                  king_y: list
+    )-> bool:
 
         diagonal = [[], [], [], []]
         straight = [[], [], [], []]

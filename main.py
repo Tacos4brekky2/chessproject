@@ -98,6 +98,12 @@ class App:
         if len(self.initial_square) == 2:
             coords = self.getSquareCoordinates(1, (self.initial_square[0], self.initial_square[1]))
             square_highlights.add(self.highlightSquare('red', coords))
+        if self.state.in_check[0] == 1:
+            coords = self.getSquareCoordinates(1, (self.state.king_pos[0][0], self.state.king_pos[0][1]))
+            square_highlights.add(self.highlightSquare('red', coords))
+        elif self.state.in_check[1] == 1:
+            coords = self.getSquareCoordinates(1, (self.state.king_pos[1][0], self.state.king_pos[1][1]))
+            square_highlights.add(self.highlightSquare('red', coords))
         
         piece_sprites.draw(self.screen)
         square_highlights.draw(self.screen)
