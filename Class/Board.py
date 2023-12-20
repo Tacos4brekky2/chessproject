@@ -182,11 +182,23 @@ MOVE: {move}
             return False
         offset = (move[5] - move[3], move[2] - move[4])
         offset_key = abs(move[1]) if move[1] != -1 else -1
-        for v in self.offsets[offset_key]:
-            if v == offset:
-                if abs(move[1]) in [3, -1]:
+        for o in self.offsets[offset_key]:
+            if o == offset:
+                if abs(move[1]) == 3:
                     return True
-                return self.willNotCollide(move, self.offsets[offset_key], v)
+                elif (
+                    (move[1] in [1, -1]) and
+                    (o[0] != 0) and
+                    (self.board[move[2] - o[1]][move[3] + o[0]] // move[1] >= 0)
+                ):
+                    return False
+                elif (
+                    (move[1] in [1, -1]) and
+                    (o[0] == 0) and
+                    (self.board[move[2] - o[1]][move[3] + o[0]] != 0)
+                ):
+                    return False
+                return self.willNotCollide(move, self.offsets[offset_key], o)
         return False
     
 
