@@ -19,7 +19,8 @@ clock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# IMAGES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# SKINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# PIECES
 b_bishop = pygame.image.load('Assets/Pieces/black_bishop.png')
 b_king = pygame.image.load('Assets/Pieces/black_king.png')
 b_knight = pygame.image.load('Assets/Pieces/black_knight.png')
@@ -32,7 +33,10 @@ w_knight = pygame.image.load('Assets/Pieces/white_knight.png')
 w_pawn = pygame.image.load('Assets/Pieces/white_pawn.png')
 w_queen = pygame.image.load('Assets/Pieces/white_queen.png')
 w_rook = pygame.image.load('Assets/Pieces/white_rook.png')
+# BOARDS
 board_skin_tarzan = pygame.image.load('Assets/Boards/board_tarzan.png')
+# SQUARE OVERLAYS
+square_highlight_red = pygame.image.load('Assets/red_circle.png')
 
 Assets = {
     1: b_pawn,
@@ -47,7 +51,8 @@ Assets = {
     10: w_queen,
     11: b_king,
     12: w_king,
-    13: board_skin_tarzan
+    13: board_skin_tarzan,
+    14: square_highlight_red
 }
 
 # BOARD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

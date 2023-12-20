@@ -101,8 +101,8 @@ class King(pygame.sprite.Sprite):
 class Board(pygame.sprite.Sprite):
     def __init__(self,
                  skin: str,
-                 x = st.L_PAD,
-                 y = st.U_PAD):
+                 x=st.L_PAD,
+                 y=st.U_PAD):
         super().__init__()
         match skin:
             case 'tarzan':
@@ -110,3 +110,18 @@ class Board(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(image, (st.WIDTH - st.L_PAD - st.R_PAD, st.HEIGHT - st.U_PAD - st.D_PAD))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+
+
+
+
+class Highlight(pygame.sprite.Sprite):
+    def __init__(self,
+                 skin: str,
+                 coords: tuple):
+        super().__init__()
+        match skin:
+            case 'red':
+                image = st.square_highlight_red
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (coords[1] + 10, coords[0] + 5)

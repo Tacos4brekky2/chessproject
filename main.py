@@ -6,6 +6,9 @@ import setup as st
 import Class.Sprites as sprites
 import Class.Board as brd
  
+
+
+
 class App:
     def __init__(self):
         self._running = True
@@ -37,22 +40,27 @@ class App:
             case pygame.QUIT:
                 self._running = False
             case pygame.MOUSEBUTTONUP:
-                square = self.getClickedSquare(pygame.mouse.get_pos())
-                if len(self.initial_square) == 0:
-                    if self.state.board[square[1]][square[0]] != 0:
-                        self.initial_square = [square[1], square[0]]
-                elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
-                    self.initial_square = []
-                else:
-                    square = self.getClickedSquare(pygame.mouse.get_pos())
-                    self.target_square = [square[1], square[0]]
-                    self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
-                    self.state.movePiece(self.move_tuple)
-                    print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
-                    self.initial_square = []
-                    self.target_square = []
-                    self.move_tuple = ()
-                    print(f'{self.state.active_color[1][self.state.active_color[0]]}')
+                mouse_pos = pygame.mouse.get_pos()
+                if (
+                    (st.L_PAD <= mouse_pos[0] <= (st.L_PAD + st.WIDTH)) and
+                    (st.U_PAD <= mouse_pos[1] <= (st.L_PAD + st.WIDTH))
+                ):
+                    square = self.getClickedSquare(mouse_pos)
+                    if len(self.initial_square) == 0:
+                        if self.state.board[square[1]][square[0]] != 0:
+                            self.initial_square = [square[1], square[0]]
+                    elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
+                        self.initial_square = []
+                    else:
+                        square = self.getClickedSquare(pygame.mouse.get_pos())
+                        self.target_square = [square[1], square[0]]
+                        self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
+                        self.state.movePiece(self.move_tuple)
+                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
+                        self.initial_square = []
+                        self.target_square = []
+                        self.move_tuple = ()
+                        print(f'{self.state.active_color[1][self.state.active_color[0]]}')
 
     """
     Returns the board index of a square that was clicked.
@@ -76,6 +84,7 @@ class App:
 
     def render(self):
         piece_sprites = pygame.sprite.Group()
+        square_highlights = pygame.sprite.Group()
         board_render = sprites.Board('tarzan')
         piece_sprites.add(board_render)
         for i, rank in enumerate(self.state.board):
@@ -86,7 +95,12 @@ class App:
                     coords = self.getSquareCoordinates(1, (j, i))
                     render = self.getPieceSprite(piece, coords)
                     piece_sprites.add(render)
+        if len(self.initial_square) == 2:
+            coords = self.getSquareCoordinates(1, (self.initial_square[0], self.initial_square[1]))
+            square_highlights.add(self.highlightSquare('red', coords))
+        
         piece_sprites.draw(self.screen)
+        square_highlights.draw(self.screen)
 
         pygame.display.update()
     
@@ -124,7 +138,11 @@ class App:
             6: sprites.King(0, position)
         }
         return piece_dict[piece_number]
-
+    
+    def highlightSquare(self,
+                        skin: str,
+                        square):
+        return sprites.Highlight(skin, square)
 
 if __name__ == "__main__" :
     pygame.init()
