@@ -84,8 +84,8 @@ SQUARE_BOUNDARIES_Y = {
 }
 
 
-print(_board_x_bound, SQUARE_BOUNDARIES_X)
-print(_board_y_bound, SQUARE_BOUNDARIES_Y)
+#print(_board_x_bound, SQUARE_BOUNDARIES_X)
+#print(_board_y_bound, SQUARE_BOUNDARIES_Y)
 
 # FONTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

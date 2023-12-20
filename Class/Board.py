@@ -2,6 +2,7 @@ import numpy as np
 import regex as re
 import config
 import setup as st
+import os
 
 
 class Board():
@@ -10,22 +11,51 @@ class Board():
         self.position = re.split('[/ ]', fen)
         self.active_color = [0 if self.position[8] == 'w' else 1, 
                             {0: "White's Turn", 1: "Black's Turn"}]
+        self.opposite_color = {0: 1, 1:0}
+        self.lines = {
+            'up': [(0, x) for x in range(1, 8)],
+            'down': [(0, -x) for x in range(1, 8)],
+            'right': [(x, 0) for x in range(1, 8)],
+            'left': [(-x, 0) for x in range(1, 8)],
+            'right_up': [(x, x) for x in range(1, 8)],
+            'right_down': [(x, -x) for x in range(1, 8)],
+            'left_up': [(-x, x) for x in range(1, 8)],
+            'left_down': [(-x, -x) for x in range(1, 8)]
+        }
         self.offsets = {
             -1: [(0, -1), (0, -2), (-1, -1), (1, -1)],          # Black Pawn
             1: [(0, 1), (0, 2), (1, 1), (-1, 1)],               # White Pawn
-            2: [(x, x) for x in range(-7, 8) if x != 0] +       # Bishop
-                 [(x, -x) for x in range(-7, 8) if x != 0],
+            2: self.lines['right_up'] +                         # Bishop
+                self.lines['right_down'] +
+                self.lines['left_up'] +
+                self.lines['left_down'],
             3: [(1, 2), (-1, 2), (1, -2), (-1, -2),             # Knight
                 (2, 1), (2, -1), (-2, 1), (-2, -1)],
-            4: [(x, 0) for x in range(-7, 8) if x != 0] +       # Rook
-                [(0, x) for x in range(-7, 8) if x != 0],
-            5: [(0, x) for x in range(-7, 8) if x != 0] +       # Queen
-                 [(x, 0) for x in range(-7, 8) if x != 0] +
-                 [(x, x) for x in range(-7, 8) if x != 0] +
-                 [(x, -x) for x in range(-7, 8) if x != 0],
+            4: self.lines['up'] +                               # Rook
+                self.lines['down'] +
+                self.lines['right'] +
+                self.lines['left'],
+            5: self.lines['up'] +                               # Queen
+                self.lines['down'] +
+                self.lines['right'] +
+                self.lines['left'] +
+                self.lines['right_up'] +
+                self.lines['right_down'] +
+                self.lines['left_up'] +
+                self.lines['left_down'],
             6: [(0, 1), (1, 1), (1, 0), (1, -1),                # King
-                (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+                (0, -1), (-1, -1), (-1, 0), (-1, 1)],
+            7: [[self.lines['up'],                               # Queen
+                self.lines['down'],
+                self.lines['right'],
+                self.lines['left']],
+                [self.lines['right_up'],
+                self.lines['right_down'],
+                self.lines['left_up'],
+                self.lines['left_down']]]
         }
+        self.in_check = [0, 0]  # 0 = White, 1 = Black
+        self.king_pos = [[7, 4], [0, 4]]
         self.move_number = int(self.position[12]) - 1
         self.fifty_move_count = int(self.position[11])
         self.can_castle = {(0, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
@@ -63,7 +93,6 @@ class Board():
     def populateBoard(self):
         for r in range(7, -1, -1):
             for i, f in enumerate(self.position[r]):
-                #print(i, f)
                 if re.match('[1-8]', f):
                     for n in range(int(f), int(self.position[r][int(i)])):
                         self.board[r][n] = 0
@@ -88,14 +117,26 @@ class Board():
             self,
             move: tuple
     ):
+        os.system('clear')
         if self.isValidMove(move):
             self.board[move[4]][move[5]] = move[1]
             self.board[move[2]][move[3]] = 0
+            if abs(move[1]) == 6:
+                self.king_pos[self.active_color[0]] = [move[4], move[5]]
             self.changeColor()
+            print(f'''
+===== Board.movePiece() =====
+WHITE KING POS (Ri, Fi): {self.king_pos[0]}
+BLACK KING POS (Ri, Fi): {self.king_pos[1]}
+TURN: {self.active_color[1][self.active_color[0]]}
+MOVE: {move}
+===========================
+            ''')
             self.incrementFiftyMoveCounter(move)
             self.incrementMove()
-     
-        
+            print(self.checkScan(self.active_color[0]))
+
+
     """
     *** OUTPUTS NEW MOVE TUPLE FORMAT ***
     --- Converts initial and target move squares to a move tuple ---
@@ -141,13 +182,11 @@ class Board():
             return False
         offset = (move[5] - move[3], move[2] - move[4])
         offset_key = abs(move[1]) if move[1] != -1 else -1
-        print(offset_key)
         for v in self.offsets[offset_key]:
-            print(v)
             if v == offset:
                 if abs(move[1]) in [3, -1]:
                     return True
-                return self.checkCollisions(move, self.offsets[offset_key], v)
+                return self.willNotCollide(move, self.offsets[offset_key], v)
         return False
     
 
@@ -162,7 +201,7 @@ class Board():
         - Rook
         - Queen
     """
-    def checkCollisions(self,
+    def willNotCollide(self,
                         move: tuple,
                         vectors: list,
                         offset: tuple) -> bool:
@@ -189,12 +228,95 @@ class Board():
                 return False
         return True
     
+# TESTED: Works with all pieces from every direction.
+    def checkScan(self,
+                  color: int) -> bool:
+        if color == 0:
+            king_x = self.king_pos[0][1]
+            king_y = self.king_pos[0][0]
+        else:
+            king_x = self.king_pos[1][1]
+            king_y = self.king_pos[1][0]
+
+        diagonal = [[], [], [], []]
+        straight = [[], [], [], []]
+        knight = []
+
+        for i, x in enumerate(self.offsets[7][1]):
+            for offset in x:
+                if (
+                    ((offset[0] != 0) and (offset[1] != 0)) and
+                    (-1 < king_y - offset[1] < 8) and
+                    (-1 < king_x + offset[0] < 8)
+                ):
+                    diagonal[i].append(offset)
+        for i, x in enumerate(self.offsets[7][0]):
+            for offset in x:
+                if (
+                    ((offset[0] == 0) and (-1 < king_y - offset[1] < 8)) or 
+                    ((offset[1] == 0) and (-1 < king_x + offset[0] < 8))
+                ):
+                    straight[i].append(offset)
+        for offset in self.offsets[3]:
+            if (
+                (-1 < king_y - offset[1] < 8) and
+                (-1 < king_x + offset[0] < 8)
+            ):
+                knight.append(offset)
+#         print(f'''
+# ===== Board.checkScan() =====
+# {self.active_color[1][color]} CHECK LIST
+# DIAGONAL: {diagonal}
+# STRAIGHT: {straight}
+# KNIGHT: {knight}
+# ''')
+        for x in knight:
+            if self.board[king_y - x[1]][king_x + x[0]] == (-3 if color == 0 else 3):
+                return True
+
+        for x in straight:
+            for offset in x:
+                if (
+                    (offset in [(0, 1), (0, -1), (1, 0), (-1, 0)]) and
+                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6, -6])
+                ):
+                    return True
+                elif self.board[king_y - offset[1]][king_x + offset[0]] in [
+                    -4 if color == 0 else 4, -5 if color == 0 else 5
+                ]:
+                    return True
+                elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
+                    break
+
+        for x in diagonal:
+            for offset in x:
+                if (
+                    (offset in [(1, 1), (1, -1), (-1, 1), (-1, -1)]) and
+                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6, -6])
+                ):
+                    return True
+                elif (
+                    (offset in [
+                        (-1, 1) if color == 0 else (-1, -1),
+                        (1, 1) if color == 0 else (1, -1)
+                    ]) and
+                    (self.board[king_y - offset[1]][king_x + offset[0]] == (-1 if color == 0 else 1))
+                ):
+                    return True
+                elif self.board[king_y - offset[1]][king_x + offset[0]] in [
+                    -2 if color == 0 else 2, -5 if color == 0 else 5
+                ]:
+                    return True
+
+                elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
+                    break
+        
+        #print('==================')
+
+        
 
     def changeColor(self):
-        if self.active_color[0] == 0:
-            self.active_color[0] = 1
-        else:
-            self.active_color[0] = 0
+        self.active_color[0] = self.opposite_color[self.active_color[0]]
 
 
     def incrementMove(self):

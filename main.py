@@ -15,7 +15,7 @@ class App:
         self.target_square = []
         self.move_tuple = ()
         self.perspective = 0           # White = 0, Black = 1
-        print(self.state.board)
+        #print(self.state.board)
  
     def main(self):
         # Event handler
@@ -37,10 +37,12 @@ class App:
             case pygame.QUIT:
                 self._running = False
             case pygame.MOUSEBUTTONUP:
+                square = self.getClickedSquare(pygame.mouse.get_pos())
                 if len(self.initial_square) == 0:
-                    square = self.getClickedSquare(pygame.mouse.get_pos())
                     if self.state.board[square[1]][square[0]] != 0:
                         self.initial_square = [square[1], square[0]]
+                elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
+                    self.initial_square = []
                 else:
                     square = self.getClickedSquare(pygame.mouse.get_pos())
                     self.target_square = [square[1], square[0]]
@@ -122,39 +124,6 @@ class App:
             6: sprites.King(0, position)
         }
         return piece_dict[piece_number]
-    
-    def playerTurn(self):
-        turn = True
-        playermove = tuple()
-        while turn:
-            os.system('clear')
-            print(f'\n======= Move {self.state.move_number} =======')
-            print(self.state.board)
-            print(self.state.active_color[1][self.state.active_color[0]])
-            playermove = self.state.moveStrConvert(input("Enter a move: "))
-            if playermove is None:
-                continue
-            elif playermove[6] == 97:
-                continue
-            elif self.state.moveScan(playermove):
-                offset = self.state.moveScan(playermove)
-                break
-
-        match playermove[6]:
-            case 99:
-                #os.system('clear')
-                if self.state.active_color[0] == 0:
-                        print('Winner: Black')
-                else:
-                        print('Winner: White')
-            case 98:
-                #Draw
-                pass
-
-        self.state.movePiece(playermove, offset)
-
-
-
 
 
 if __name__ == "__main__" :
