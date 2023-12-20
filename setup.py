@@ -5,7 +5,7 @@ FPS = 60
 L_PAD = 0
 R_PAD = 0
 U_PAD = 0
-D_PAD = 0
+D_PAD = 75
 
 WIDTH = 600 + L_PAD + R_PAD
 HEIGHT = 600 + U_PAD + D_PAD
@@ -37,6 +37,9 @@ w_rook = pygame.image.load('Assets/Pieces/white_rook.png')
 board_skin_tarzan = pygame.image.load('Assets/Boards/board_tarzan.png')
 # SQUARE OVERLAYS
 square_highlight_red = pygame.image.load('Assets/red_circle.png')
+
+# BORDERS
+gold_border_150x35 = pygame.image.load('Assets/gold_border.png')
 
 Assets = {
     1: b_pawn,

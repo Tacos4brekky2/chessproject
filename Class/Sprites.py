@@ -1,4 +1,5 @@
 import pygame
+from pygame.sprite import Group
 import setup as st
 
 
@@ -125,3 +126,18 @@ class Highlight(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[1] + 10, coords[0] + 5)
+
+
+
+
+class PlayerClock(pygame.sprite.Sprite):
+    def __init__(self,
+                 skin: str,
+                 coords: tuple) -> None:
+        super().__init__()
+        match skin:
+            case 'default_black':
+                image = st.gold_border_150x35
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = coords

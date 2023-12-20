@@ -36,6 +36,7 @@ class App:
         pygame.quit()
  
     def onEvent(self, event):
+        print(event)
         match event.type:
             case pygame.QUIT:
                 self._running = False
@@ -85,6 +86,7 @@ class App:
     def render(self):
         piece_sprites = pygame.sprite.Group()
         square_highlights = pygame.sprite.Group()
+        gui_elements = pygame.sprite.Group()
         board_render = sprites.Board('tarzan')
         piece_sprites.add(board_render)
         for i, rank in enumerate(self.state.board):
@@ -104,9 +106,13 @@ class App:
         elif self.state.in_check[1] == 1:
             coords = self.getSquareCoordinates(1, (self.state.king_pos[1][0], self.state.king_pos[1][1]))
             square_highlights.add(self.highlightSquare('red', coords))
+
+        gui_elements.add(sprites.PlayerClock('default_black', (st. L_PAD + 70, st.U_PAD + 620)))
+        gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
         
         piece_sprites.draw(self.screen)
         square_highlights.draw(self.screen)
+        gui_elements.draw(self.screen)
 
         pygame.display.update()
     
