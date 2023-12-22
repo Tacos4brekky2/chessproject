@@ -16,7 +16,6 @@ class App:
         self.state = brd.Board(cf.starting_position)
         self.initial_square = []
         self.target_square = []
-        self.move_tuple = ()
         self.perspective = 0    
         
         self.piece_sprites = pygame.sprite.Group()
@@ -24,8 +23,7 @@ class App:
         self.gui_elements = pygame.sprite.Group()  
         
         
-        self.updateSprites()  # White = 0, Black = 1
-        #print(self.state.board)
+        self.updateSprites()
  
     def main(self):
         # Event handler
@@ -43,7 +41,6 @@ class App:
         pygame.quit()
  
     def onEvent(self, event):
-        #print(event)
         match event.type:
             case pygame.QUIT:
                 self._running = False
@@ -60,15 +57,15 @@ class App:
                     elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
                         self.initial_square = []
                     else:
+                        os.system('clear')
                         self.target_square = [square[1], square[0]]
-                        self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
-                        self.state.movePiece(self.move_tuple)
+                        move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
+                        print(self.state.mateScan(move_tuple[0]))
+                        self.state.movePiece(move_tuple)
                         self.updateSprites()
-                        print(mouse_pos)
-                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
+                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
                         self.initial_square = []
                         self.target_square = []
-                        self.move_tuple = ()
                         print(f'{self.state.active_color[1][self.state.active_color[0]]}')
 
 
@@ -125,6 +122,7 @@ class App:
             """Returns the board index of a square that was clicked.
     Output = [file index, rank index]
     """
+            
             res = [-1, -1]
             for i, x in enumerate(st.board_x_bound):
                 if x < pos[0]:
@@ -134,7 +132,7 @@ class App:
                     res[1] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
             return res
      
-     
+
     def getTopLeft(
             self,
             input_type: int,
@@ -148,7 +146,7 @@ class App:
         - 0: Algebraic notation. ('a', 3)
         - 1: Board index. (file, rank)
     Output: (x, y)
-        """
+    """
 
         if input_type == 0:
             return (

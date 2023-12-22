@@ -55,7 +55,9 @@ class Board():
                 self.lines['left_down']]]
         }
         self.in_check = [0, 0]  # 0 = White, 1 = Black
-        self.king_pos = [[7, 4], [0, 4]]
+        self.king_pos = [[7, 4], [0, 4]] # RF INDEX
+        self.checked_by = [[], []]
+
         self.move_number = int(self.position[12]) - 1
         self.fifty_move_count = int(self.position[11])
         self.can_castle = {(0, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
@@ -119,7 +121,6 @@ class Board():
     ) -> None:
         king_x = self.king_pos[move[0]][1]
         king_y = self.king_pos[move[0]][0]
-        os.system('clear')
         #print(f'KING POS: {self.king_pos[move[0]]}')
         #print(self.checkScan(self.active_color[0], king_x, king_y))
         if self.isValidMove(move):
@@ -130,7 +131,7 @@ class Board():
             if abs(move[1]) == 6:
                 king_x = move[5]
                 king_y = move[4]
-            if self.checkScan(move[0], king_x, king_y):
+            if self.checkScan('quick', move[0], king_x, king_y):
                 self.board[move[4]][move[5]] = tmp
                 self.board[move[2]][move[3]] = move[1]
                 self.king_pos[move[0]] = tmp_king_pos
@@ -138,7 +139,7 @@ class Board():
                 if abs(move[1]) == 6:
                     self.king_pos[move[0]] = [move[4], move[5]]
                 self.in_check[move[0]] = 0
-                if self.checkScan(self.opposite_color[move[0]], self.king_pos[self.opposite_color[move[0]]][1], self.king_pos[self.opposite_color[move[0]]][0]):
+                if self.checkScan('quick', self.opposite_color[move[0]], self.king_pos[self.opposite_color[move[0]]][1], self.king_pos[self.opposite_color[move[0]]][0]):
                     self.in_check[self.opposite_color[move[0]]] = 1
                 self.changeColor()
                 print(f'''
@@ -257,12 +258,60 @@ MOVE: {move}
                 return False
         return True
     
+    def mateScan(self,
+             color: int
+    ) -> bool:
+        """UNFINISHED:
+        Calls checkScan() for every empty square around the king.
+
+        - Returns True if the king can't make a move.
+
+        ADD:
+        Find a player's legal moves(?)
+        Can the checking piece be captured
+        Can the check be blocked
+    """
+        empty_check = []
+        if color == 0:
+            king = 6
+        else:
+            king = -6
+        king_x = self.king_pos[color][1]
+        king_y = self.king_pos[color][0]
+
+        # Search for valid empty squares
+        for offset in self.offsets[6]:
+            if (
+                (0 <= king_y - offset[1] <= 7) and
+                (0 <= king_x + offset[0] <= 7)
+            ):
+                is_checked = self.checkScan('quick', color, king_x + offset[0], king_y - offset[1])
+                candidate_square = self.board[king_y - offset[1]][king_x + offset[0]]
+                if (
+                    (candidate_square != 0) and
+                    (king / candidate_square > 0)
+                ):
+                    continue
+                if is_checked is False:
+                    return False
+                empty_check.append(offset)
+                #print(f'OFFSET: {offset} ===== {is_check} ====== KING: {king_x + offset[0], king_y - offset[1]}')
+                #print(empty_check)
+        if len(empty_check) > 0:
+            print("MATE")
+            return True
+        
+        # Search for pieces that can cover the check
+        
+
+    
 # TESTED: Works with all pieces from every direction.
     def checkScan(self,
+                  mode: str,
                   color: int,
                   king_x: list,
                   king_y: list
-    )-> bool:
+    ) -> bool:
 
         diagonal = [[], [], [], []]
         straight = [[], [], [], []]
@@ -296,21 +345,32 @@ MOVE: {move}
 # STRAIGHT: {straight}
 # KNIGHT: {knight}
 # ''')
+        checked_by = []
         for x in knight:
             if self.board[king_y - x[1]][king_x + x[0]] == (-3 if color == 0 else 3):
-                return True
+                print("KNIGHT")
+                if mode == 'quick':
+                    return True
+                checked_by.append(x)
 
         for x in straight:
             for offset in x:
                 if (
                     (offset in [(0, 1), (0, -1), (1, 0), (-1, 0)]) and
-                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6, -6])
+                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6 if color == 1 else -6])
                 ):
-                    return True
+                    print("KING")
+                    if mode == 'quick':
+                        return True
+                    checked_by.append(x)
+                    
                 elif self.board[king_y - offset[1]][king_x + offset[0]] in [
                     -4 if color == 0 else 4, -5 if color == 0 else 5
                 ]:
-                    return True
+                    print("RQ")
+                    if mode == 'quick':
+                        return True
+                    checked_by.append(x)
                 elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
                     break
 
@@ -318,9 +378,12 @@ MOVE: {move}
             for offset in x:
                 if (
                     (offset in [(1, 1), (1, -1), (-1, 1), (-1, -1)]) and
-                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6, -6])
+                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6 if color == 1 else -6])
                 ):
-                    return True
+                    print("KING")
+                    if mode == 'quick':
+                        return True
+                    checked_by.append(x)
                 elif (
                     (offset in [
                         (-1, 1) if color == 0 else (-1, -1),
@@ -328,14 +391,21 @@ MOVE: {move}
                     ]) and
                     (self.board[king_y - offset[1]][king_x + offset[0]] == (-1 if color == 0 else 1))
                 ):
-                    return True
+                    print('PAWN')
+                    if mode == 'quick':
+                        return True
+                    checked_by.append(x)
                 elif self.board[king_y - offset[1]][king_x + offset[0]] in [
                     -2 if color == 0 else 2, -5 if color == 0 else 5
                 ]:
-                    return True
+                    print('BQ')
+                    if mode == 'quick':
+                        return True
+                    checked_by.append(x)
 
                 elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
                     break
+        return False
         
         #print('==================')
 
