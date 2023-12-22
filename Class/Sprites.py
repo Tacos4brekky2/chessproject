@@ -131,9 +131,9 @@ class Highlight(pygame.sprite.Sprite):
                 image = st.square_highlight_green
             case 'circle_red':
                 image = st.square_red_circle
-        self.image = pygame.transform.scale(image, (st.CELL_SIZE, st.CELL_SIZE))
+        self.image = pygame.transform.scale(image, (75, 75))
         self.rect = self.image.get_rect()
-        self.rect.topleft = (coords[1] + 10, coords[0] + 5)
+        self.rect.topleft = (coords[0] + 5, coords[1] + 10)
 
 
 

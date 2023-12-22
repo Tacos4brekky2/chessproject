@@ -2,13 +2,13 @@ import pygame
 
 FPS = 60
 
-L_PAD = 0
-R_PAD = 0
-U_PAD = 0
-D_PAD = 75
+L_PAD = 100
+R_PAD = 150
+U_PAD = 75
+D_PAD = 200
 
-WIDTH = 600 + L_PAD + R_PAD
-HEIGHT = 600 + U_PAD + D_PAD
+WIDTH = (600 + L_PAD + R_PAD)
+HEIGHT = (600 + U_PAD + D_PAD)
 SCREEN = WIDTH, HEIGHT
 CELL_SIZE = 75
 ROWS = 8
@@ -71,34 +71,34 @@ FILE_LETTERS = {
 RANK_INDEX = {
     1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 0
 }
-_board_x_bound = [x + L_PAD for x in range(0, WIDTH - R_PAD - L_PAD + 1) if x % CELL_SIZE == 0]
+board_x_bound = [x + L_PAD for x in range(0, WIDTH - R_PAD + 1) if x % CELL_SIZE == 0]
 SQUARE_BOUNDARIES_X = {
     # X, a-h file -> int
-    (_board_x_bound[0], _board_x_bound[1]): 0,
-    (_board_x_bound[1], _board_x_bound[2]): 1,
-    (_board_x_bound[2], _board_x_bound[3]): 2,
-    (_board_x_bound[3], _board_x_bound[4]): 3,
-    (_board_x_bound[4], _board_x_bound[5]): 4,
-    (_board_x_bound[5], _board_x_bound[6]): 5,
-    (_board_x_bound[6], _board_x_bound[7]): 6,
-    (_board_x_bound[7], _board_x_bound[8]): 7
+    (board_x_bound[0], board_x_bound[1]): 0,
+    (board_x_bound[1], board_x_bound[2]): 1,
+    (board_x_bound[2], board_x_bound[3]): 2,
+    (board_x_bound[3], board_x_bound[4]): 3,
+    (board_x_bound[4], board_x_bound[5]): 4,
+    (board_x_bound[5], board_x_bound[6]): 5,
+    (board_x_bound[6], board_x_bound[7]): 6,
+    (board_x_bound[7], board_x_bound[8]): 7
 }
-_board_y_bound = [x + U_PAD for x in range(0, HEIGHT - D_PAD + 1) if x % CELL_SIZE == 0]
+board_y_bound = [x + U_PAD for x in range(0, HEIGHT - D_PAD + 1) if x % CELL_SIZE == 0]
 SQUARE_BOUNDARIES_Y = {
     # Y, 8-1 rank -> int
-    (_board_y_bound[0], _board_y_bound[1]): 0,
-    (_board_y_bound[1], _board_y_bound[2]): 1,
-    (_board_y_bound[2], _board_y_bound[3]): 2,
-    (_board_y_bound[3], _board_y_bound[4]): 3,
-    (_board_y_bound[4], _board_y_bound[5]): 4,
-    (_board_y_bound[5], _board_y_bound[6]): 5,
-    (_board_y_bound[6], _board_y_bound[7]): 6,
-    (_board_y_bound[7], _board_y_bound[8]): 7
+    (board_y_bound[0], board_y_bound[1]): 0,
+    (board_y_bound[1], board_y_bound[2]): 1,
+    (board_y_bound[2], board_y_bound[3]): 2,
+    (board_y_bound[3], board_y_bound[4]): 3,
+    (board_y_bound[4], board_y_bound[5]): 4,
+    (board_y_bound[5], board_y_bound[6]): 5,
+    (board_y_bound[6], board_y_bound[7]): 6,
+    (board_y_bound[7], board_y_bound[8]): 7
 }
 
 
-#print(_board_x_bound, SQUARE_BOUNDARIES_X)
-#print(_board_y_bound, SQUARE_BOUNDARIES_Y)
+print(board_x_bound, SQUARE_BOUNDARIES_X)
+print(board_y_bound, SQUARE_BOUNDARIES_Y)
 
 # FONTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

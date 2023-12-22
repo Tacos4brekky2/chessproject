@@ -60,49 +60,38 @@ class App:
                     elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
                         self.initial_square = []
                     else:
-                        square = self.getClickedSquare(pygame.mouse.get_pos())
                         self.target_square = [square[1], square[0]]
                         self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
                         self.state.movePiece(self.move_tuple)
                         self.updateSprites()
+                        print(mouse_pos)
                         print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
                         self.initial_square = []
                         self.target_square = []
                         self.move_tuple = ()
                         print(f'{self.state.active_color[1][self.state.active_color[0]]}')
 
-    """
-    Returns the board index of a square that was clicked.
-
-    Output = [rank index, file index]
-    """
-    def getClickedSquare(self, 
-                   pos: tuple
-                   ) -> list:
-        res = [-1, -1]
-        for x_range in st.SQUARE_BOUNDARIES_X:
-            if x_range[0] <= pos[0] <= x_range[1]:
-                res[0] = (st.SQUARE_BOUNDARIES_X[x_range])
-        for y_range in st.SQUARE_BOUNDARIES_Y:
-            if y_range[0] <= pos[1] <= y_range[1]:
-                res[1] = (st.SQUARE_BOUNDARIES_Y[y_range])
-        return res
 
     def onLoop(self):
         pass
 
     def render(self):
-        if len(self.initial_square) == 2:
-            coords = self.getSquareCoordinates(1, (self.initial_square[0], self.initial_square[1]))
-            self.board_sprites.add(self.highlightSquare('yellow', coords))
-        if self.state.in_check[0] == 1:
-            coords = self.getSquareCoordinates(1, (self.state.king_pos[0][0], self.state.king_pos[0][1]))
-            self.board_sprites.add(self.highlightSquare('red', coords))
-        elif self.state.in_check[1] == 1:
-            coords = self.getSquareCoordinates(1, (self.state.king_pos[1][0], self.state.king_pos[1][1]))
-            self.board_sprites.add(self.highlightSquare('red', coords))
-
         self.board_sprites.draw(self.screen)
+
+        highlight_sprites = pygame.sprite.Group()
+        if (
+            (len(self.initial_square) == 2)
+        ):
+            coords = self.getTopLeft(1, (self.initial_square[1], self.initial_square[0]))
+            highlight_sprites.add(sprites.Highlight('yellow', coords))
+        elif self.state.in_check[0] == 1:
+            coords = self.getTopLeft(1, (self.state.king_pos[0][1], self.state.king_pos[0][0]))
+            highlight_sprites.add(sprites.Highlight('red', coords))
+        elif self.state.in_check[1] == 1:
+            coords = self.getTopLeft(1, (self.state.king_pos[1][1], self.state.king_pos[1][0]))
+            highlight_sprites.add(sprites.Highlight('red', coords))
+        highlight_sprites.draw(self.screen)
+
         self.piece_sprites.draw(self.screen)
         self.gui_elements.draw(self.screen)
 
@@ -120,28 +109,58 @@ class App:
                 if piece == 0:
                     continue
                 else:
-                    coords = self.getSquareCoordinates(1, (j, i))
+                    coords = self.getTopLeft(1, (j, i))
                     render = self.getPieceSprite(piece, coords)
                     self.piece_sprites.add(render)
     
-        self.gui_elements.add(sprites.PlayerClock('default_black', (st. L_PAD + 70, st.U_PAD + 620)))
+        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 70, st.U_PAD + 620)))
         self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
     
-    
-    def getSquareCoordinates(
+   
+
+    def getClickedSquare(
             self,
-            input_type: int,            # 0 = tuple(('a', 3)) -> coords((0, 375)), 1 = index((0, 2)) -> coords ((0, 450))
+            pos: tuple
+        ) -> list:
+            """Returns the board index of a square that was clicked.
+    Output = [file index, rank index]
+    """
+            res = [-1, -1]
+            for i, x in enumerate(st.board_x_bound):
+                if x < pos[0]:
+                    res[0] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
+            for i, y in enumerate(st.board_y_bound):
+                if y < pos[1]:
+                    res[1] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
+            return res
+     
+     
+    def getTopLeft(
+            self,
+            input_type: int,
             square: tuple, 
             files = st.FILE_LETTERS, 
             ranks = st.RANK_INDEX,
             cell_size = st.CELL_SIZE
     ) -> tuple:
+        """Returns the top left coordinates of a square that was clicked.
+    Input types:
+        - 0: Algebraic notation. ('a', 3)
+        - 1: Board index. (file, rank)
+    Output: (x, y)
+        """
+
         if input_type == 0:
-            return ((files[square[0]] * cell_size) - 5, 
-                    (ranks[square[1]] * cell_size) - 10)
+            return (
+                st.L_PAD + (files[square[0]] * cell_size) - 5, 
+                st.U_PAD(ranks[square[1]] * cell_size) - 10
+            )
         elif input_type == 1:
             return (st.L_PAD + (square[0] * cell_size) - 5, 
-                    st.U_PAD + (square[1] * cell_size) - 10)
+                    st.U_PAD + (square[1] * cell_size) - 10
+                )
+        
+
 
     def getPieceSprite(self,
                  piece_number: int,
@@ -161,11 +180,6 @@ class App:
             6: sprites.King(0, position)
         }
         return piece_dict[piece_number]
-    
-    def highlightSquare(self,
-                        skin: str,
-                        square):
-        return sprites.Highlight(skin, square)
 
 if __name__ == "__main__" :
     pygame.init()
