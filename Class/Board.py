@@ -185,14 +185,9 @@ MOVE: {move}
     
     
 
-    """
-    - offset is the change in (x, y) position from a piece's starting square
-        to its target square.
-    - offset is viewed from white's perspective to make checking and visualizing 
-        move vectors much easier.
-    """
     def isValidMove(self,
                     move: tuple) -> bool:
+        # Trying to move other player's piece.
         if (
             ((move[0] == 0) and (move[1] < 0)) or
             ((move[0] == 1) and (move[1] > 0))
@@ -200,28 +195,38 @@ MOVE: {move}
             return False
         offset = (move[5] - move[3], move[2] - move[4])
         offset_key = abs(move[1]) if move[1] != -1 else -1
-        for o in self.offsets[offset_key]:
-            if o == offset:
-                if abs(move[1]) == 3:
-                    return True
-                elif (
-                    (move[1] in [1, -1]) and
-                    (o[0] != 0) and
-                    (self.board[move[2] - o[1]][move[3] + o[0]] // move[1] >= 0)
-                ):
-                    return False
-                elif (
-                    (move[1] in [1, -1]) and
-                    (o[0] == 0) and
-                    (self.board[move[2] - o[1]][move[3] + o[0]] != 0)
-                ):
-                    return False
-                return self.willNotCollide(move, self.offsets[offset_key], o)
+        target_square = self.board[move[4]][move[5]]
+        # Trying to capture a friendly piece.
+        if (
+            ((move[0] == 0) and (target_square > 0)) or
+            ((move[0] == 1) and (target_square < 0))
+        ):
+            return False
+        # Invalid pawn captures.
+        if (
+            (abs(move[1]) == 1) and
+            ((offset[0] != 0) and (offset[1] != 0)) and
+            (target_square == 0)
+        ):
+            return False
+        # Forward pawn captures.
+        elif (
+            (abs(move[1]) == 1) and
+            (offset in [(0, 1), (0, -1)]) and
+            target_square != 0
+        ):
+            return False
+        if offset in self.offsets[offset_key]:
+            return self.willNotCollide(move, self.offsets[offset_key], offset)
         return False
     
 
-    """
-    ** isValidMove() helper function.
+    def willNotCollide(self,
+                        move: tuple,
+                        vectors: list,
+                        offset: tuple
+    ) -> bool:
+        """ isValidMove() helper function.
 
     Returns True if no collisions are detected.
 
@@ -231,10 +236,8 @@ MOVE: {move}
         - Rook
         - Queen
     """
-    def willNotCollide(self,
-                        move: tuple,
-                        vectors: list,
-                        offset: tuple) -> bool:
+        if move[1] == 3:
+            return True
         path = []
         if (offset[0] == 0) and (offset[1] < 0):                                                # Up
             path = [x for x in vectors if (x[0] == 0) and (offset[1] < x[1] < 0)]
@@ -258,6 +261,23 @@ MOVE: {move}
                 return False
         return True
     
+
+    def isValidOffset(
+        self,
+        piece_rank: int,
+        piece_file: int,
+        offset: tuple
+    ) -> bool:
+        """ Returns true if an offset moves a piece within the board
+    """
+        if (
+            (0 <= (piece_rank - offset[1] <= 7) and
+            (0 <= (piece_file + offset[0]) <= 7))
+        ):
+            return True
+        return False
+
+
     def mateScan(self,
              color: int
     ) -> bool:
