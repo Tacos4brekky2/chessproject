@@ -123,7 +123,15 @@ class Highlight(pygame.sprite.Sprite):
         match skin:
             case 'red':
                 image = st.square_highlight_red
-        self.image = image
+            case 'yellow':
+                image = st.square_highlight_yellow
+            case 'blue':
+                image = st.square_highlight_blue
+            case 'green':
+                image = st.square_highlight_green
+            case 'circle_red':
+                image = st.square_red_circle
+        self.image = pygame.transform.scale(image, (st.CELL_SIZE, st.CELL_SIZE))
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[1] + 10, coords[0] + 5)
 

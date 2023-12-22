@@ -35,8 +35,13 @@ w_queen = pygame.image.load('Assets/Pieces/white_queen.png')
 w_rook = pygame.image.load('Assets/Pieces/white_rook.png')
 # BOARDS
 board_skin_tarzan = pygame.image.load('Assets/Boards/board_tarzan.png')
+
 # SQUARE OVERLAYS
-square_highlight_red = pygame.image.load('Assets/red_circle.png')
+square_red_circle = pygame.image.load('Assets/red_circle.png')
+square_highlight_yellow = pygame.image.load('Assets/Boards/highlight_yellow.png')
+square_highlight_green = pygame.image.load('Assets/Boards/highlight_green.png')
+square_highlight_blue = pygame.image.load('Assets/Boards/highlight_blue.png')
+square_highlight_red = pygame.image.load('Assets/Boards/highlight_red.png')
 
 # BORDERS
 gold_border_150x35 = pygame.image.load('Assets/gold_border.png')
