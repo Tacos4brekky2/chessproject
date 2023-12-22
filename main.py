@@ -17,7 +17,14 @@ class App:
         self.initial_square = []
         self.target_square = []
         self.move_tuple = ()
-        self.perspective = 0           # White = 0, Black = 1
+        self.perspective = 0    
+        
+        self.piece_sprites = pygame.sprite.Group()
+        self.board_sprites = pygame.sprite.Group()
+        self.gui_elements = pygame.sprite.Group()  
+        
+        
+        self.updateSprites()  # White = 0, Black = 1
         #print(self.state.board)
  
     def main(self):
@@ -36,7 +43,7 @@ class App:
         pygame.quit()
  
     def onEvent(self, event):
-        print(event)
+        #print(event)
         match event.type:
             case pygame.QUIT:
                 self._running = False
@@ -57,6 +64,7 @@ class App:
                         self.target_square = [square[1], square[0]]
                         self.move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
                         self.state.movePiece(self.move_tuple)
+                        self.updateSprites()
                         print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {self.move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
                         self.initial_square = []
                         self.target_square = []
@@ -84,11 +92,29 @@ class App:
         pass
 
     def render(self):
-        piece_sprites = pygame.sprite.Group()
-        board_sprites = pygame.sprite.Group()
-        gui_elements = pygame.sprite.Group()
+        if len(self.initial_square) == 2:
+            coords = self.getSquareCoordinates(1, (self.initial_square[0], self.initial_square[1]))
+            self.board_sprites.add(self.highlightSquare('yellow', coords))
+        if self.state.in_check[0] == 1:
+            coords = self.getSquareCoordinates(1, (self.state.king_pos[0][0], self.state.king_pos[0][1]))
+            self.board_sprites.add(self.highlightSquare('red', coords))
+        elif self.state.in_check[1] == 1:
+            coords = self.getSquareCoordinates(1, (self.state.king_pos[1][0], self.state.king_pos[1][1]))
+            self.board_sprites.add(self.highlightSquare('red', coords))
+
+        self.board_sprites.draw(self.screen)
+        self.piece_sprites.draw(self.screen)
+        self.gui_elements.draw(self.screen)
+
+        pygame.display.update()
+    
+    def updateSprites(self):
+        self.gui_elements.empty()
+        self.board_sprites.empty()
+        self.piece_sprites.empty()
         board_render = sprites.Board('tarzan')
-        board_sprites.add(board_render)
+        self.board_sprites.add(board_render)
+
         for i, rank in enumerate(self.state.board):
             for j, piece in enumerate(rank):
                 if piece == 0:
@@ -96,26 +122,10 @@ class App:
                 else:
                     coords = self.getSquareCoordinates(1, (j, i))
                     render = self.getPieceSprite(piece, coords)
-                    piece_sprites.add(render)
-        if len(self.initial_square) == 2:
-            coords = self.getSquareCoordinates(1, (self.initial_square[0], self.initial_square[1]))
-            board_sprites.add(self.highlightSquare('yellow', coords))
-        if self.state.in_check[0] == 1:
-            coords = self.getSquareCoordinates(1, (self.state.king_pos[0][0], self.state.king_pos[0][1]))
-            board_sprites.add(self.highlightSquare('red', coords))
-        elif self.state.in_check[1] == 1:
-            coords = self.getSquareCoordinates(1, (self.state.king_pos[1][0], self.state.king_pos[1][1]))
-            board_sprites.add(self.highlightSquare('red', coords))
-
-        gui_elements.add(sprites.PlayerClock('default_black', (st. L_PAD + 70, st.U_PAD + 620)))
-        gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
-        
-
-        board_sprites.draw(self.screen)
-        piece_sprites.draw(self.screen)
-        gui_elements.draw(self.screen)
-
-        pygame.display.update()
+                    self.piece_sprites.add(render)
+    
+        self.gui_elements.add(sprites.PlayerClock('default_black', (st. L_PAD + 70, st.U_PAD + 620)))
+        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
     
     
     def getSquareCoordinates(
