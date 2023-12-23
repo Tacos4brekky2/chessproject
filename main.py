@@ -61,6 +61,7 @@ class App:
                         self.target_square = [square[1], square[0]]
                         move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
                         print(self.state.mateScan(move_tuple[0]))
+                        print(self.state.getLegalMoves(move_tuple[0]))
                         self.state.movePiece(move_tuple)
                         self.updateSprites()
                         print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')

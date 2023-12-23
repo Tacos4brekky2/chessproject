@@ -146,14 +146,14 @@ class Board():
                 ) > 0:
                     self.in_check[self.opposite_color[move[0]]] = 1
                 self.changeColor()
-                print(f'''
-===== Board.movePiece() =====
-WHITE KING POS (Ri, Fi): {self.king_pos[0]}
-BLACK KING POS (Ri, Fi): {self.king_pos[1]}
-TURN: {self.active_color[1][move[0]]}
-MOVE: {move}
-===========================
-            ''')
+                # print(f'''
+# ===== Board.movePiece() =====
+# WHITE KING POS (Ri, Fi): {self.king_pos[0]}
+# BLACK KING POS (Ri, Fi): {self.king_pos[1]}
+# TURN: {self.active_color[1][move[0]]}
+# MOVE: {move}
+# ===========================
+#             ''')
                 self.incrementFiftyMoveCounter(move)
                 self.incrementMove()
 
@@ -216,8 +216,8 @@ MOVE: {move}
         # Forward pawn captures.
         elif (
             (abs(move[1]) == 1) and
-            (offset in [(0, 1), (0, -1)]) and
-            target_square != 0
+            (offset[0] == 0) and
+            (target_square != 0)
         ):
             return False
         if offset in self.offsets[offset_key]:
@@ -292,7 +292,6 @@ MOVE: {move}
 
         ADD:
         Find a player's legal moves(?)
-        Can the checking piece be captured
         Can the check be blocked
     """
         empty_check = []
@@ -323,16 +322,19 @@ MOVE: {move}
                 empty_check.append(offset)
                 #print(f'OFFSET: {offset} ===== {is_check} ====== KING: {king_x + offset[0], king_y - offset[1]}')
                 #print(empty_check)
+        # Double check checkmate
         if (len(check_list) > 1):
             print("MATE")
             return True
         
-        # Search for pieces that can capture the piece delivering check
+        # Search for pieces that can capture the piece delivering check.
         if (
             (len(check_list) == 1) and
             (self.checkScan(self.opposite_color[color], check_list[0][1], check_list[0][0]))  
         ):
             return False
+        
+        # Search for pieces that can cover the check.
         return True
 
     
@@ -349,9 +351,7 @@ MOVE: {move}
         diagonal = [[]] * 4
         straight = [[]] * 4
         knight = list()
-        print(diagonal, straight, knight)
 
-        print(self.offsets[7][1])
         for i, vector in enumerate(self.offsets[7][1]):
             tmp = []
             for offset in vector:
@@ -374,20 +374,20 @@ MOVE: {move}
                 (self.isValidOffset(king_y, king_x, offset))
             ):
                 knight.append(offset)
-        print(f'''
-===== Board.checkScan() =====
-{self.active_color[1][color]} CHECK LIST
-DIAGONAL: {diagonal}
-STRAIGHT: {straight}
-KNIGHT: {knight}
-''')
+#         print(f'''
+# ===== Board.checkScan() =====
+# {self.active_color[1][color]} CHECK LIST
+# DIAGONAL: {diagonal}
+# STRAIGHT: {straight}
+# KNIGHT: {knight}
+# ''')
         checked_by = []
         for offset in knight:
-            print(offset)
+            #print(offset)
             target_square = self.board[king_y - offset[1]][king_x + offset[0]]
             rf_index = ((king_y - offset[1]), (king_x + offset[0]))
             if target_square == (-3 if color == 0 else 3):
-                print("KNIGHT")
+                #print("KNIGHT")
                 checked_by.append(rf_index)
 
         for vector in straight:
@@ -402,14 +402,14 @@ KNIGHT: {knight}
                         6 if color == 1 else -6
                     ])
                 ):
-                    print("KING")
+                    #print("KING")
                     checked_by.append(rf_index)
                     
                 if target_square in [
                     -4 if color == 0 else 4,
                     -5 if color == 0 else 5
                 ]:
-                    print("RQ")
+                    #print("RQ")
                     checked_by.append(rf_index)
                 elif target_square != 0:
                     break
@@ -427,20 +427,56 @@ KNIGHT: {knight}
                         -1 if color == 0 else 1
                     ])
                 ):
-                    print("KP")
+                    #print("KP")
                     checked_by.append(rf_index)
                 elif target_square in [
                     -2 if color == 0 else 2, 
                     -5 if color == 0 else 5
                     ]:
-                    print('BQ')
+                    #print('BQ')
                     checked_by.append(rf_index)
                 elif target_square != 0:
                     break
-        print(f'CHECK LIIIIIIST: {checked_by}')
+        #print(f'CHECK LIIIIIIST: {checked_by}')
         return checked_by
         
         #print('==================')
+    
+
+
+    def getLegalMoves(
+            self,
+            color: int
+    ) -> list:
+        """ Returns all of a player's legal move tuples.
+    """
+        legal_moves = list()
+        for r, rank in enumerate(self.board):
+            for f, file in enumerate(rank):
+                if (
+                    ((color == 0) and (file > 0)) or
+                    ((color == 1) and (file < 0))
+                ):
+                    offset_key = abs(file) if file != -1 else -1
+                    for offset in self.offsets[offset_key]:
+                        if self.isValidOffset(r, f, offset):
+                            move = (color, int(file), r, f, r - offset[1], f + offset[0])
+                            if (self.isValidMove(move)):
+                                origin_square = [move[2], move[3]]
+                                target_square = [move[4], move[5]]
+                                tmp_origin = self.board[move[2], move[3]]
+                                tmp_target = self.board[move[4]][move[5]]
+
+                                self.board[move[4]][move[5]] = tmp_origin
+                                self.board[move[2], move[3]] = 0
+                                if len(self.checkScan(color, self.king_pos[color][1], self.king_pos[color][0])) != 0:
+                                    self.board[move[4]][move[5]] = tmp_target
+                                    self.board[move[2]][move[3]] = tmp_origin
+                                    continue
+                                self.board[move[4]][move[5]] = tmp_target
+                                self.board[move[2]][move[3]] = tmp_origin
+                                legal_moves.append(move)
+        return legal_moves
 
         
 
