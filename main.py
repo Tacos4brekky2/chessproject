@@ -15,7 +15,6 @@ class App:
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.state = brd.Board(cf.starting_position)
         self.initial_square = []
-        self.target_square = []
         self.perspective = 0    
         
         self.piece_sprites = pygame.sprite.Group()
@@ -51,22 +50,24 @@ class App:
                     (st.U_PAD <= mouse_pos[1] <= (st.L_PAD + st.WIDTH))
                 ):
                     square = self.getClickedSquare(mouse_pos)
-                    if len(self.initial_square) == 0:
-                        if self.state.board[square[1]][square[0]] != 0:
-                            self.initial_square = [square[1], square[0]]
-                    elif (len(self.initial_square) == 2) and square[1] == self.initial_square[0] and square[0] == self.initial_square[1]:
+                    # Select square
+                    if (
+                        (len(self.initial_square) == 0) and
+                        (self.state.board[square[0]][square[1]] != 0)
+                    ):
+                        self.initial_square = square
+                    elif (square == self.initial_square):
                         self.initial_square = []
+
                     else:
                         os.system('clear')
-                        self.target_square = [square[1], square[0]]
-                        move_tuple = self.state.indexToMove(self.initial_square, self.target_square)
-                        print(self.state.mateScan(move_tuple[0]))
-                        print(self.state.getLegalMoves(move_tuple[0]))
-                        self.state.movePiece(move_tuple)
+                        move = self.state.indexToMove(self.initial_square, square)
+                        print(self.state.mateScan(move[0]))
+                        print(self.state.getLegalMoves(move[0]))
+                        self.state.movePiece(move)
                         self.updateSprites()
-                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {self.target_square}\nMOVE: {move_tuple}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
+                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
                         self.initial_square = []
-                        self.target_square = []
                         print(f'{self.state.active_color[1][self.state.active_color[0]]}')
 
 
@@ -121,16 +122,16 @@ class App:
             pos: tuple
         ) -> list:
             """Returns the board index of a square that was clicked.
-    Output = [file index, rank index]
+    Output = [rank index, file index]
     """
             
             res = [-1, -1]
             for i, x in enumerate(st.board_x_bound):
                 if x < pos[0]:
-                    res[0] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
+                    res[1] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
             for i, y in enumerate(st.board_y_bound):
                 if y < pos[1]:
-                    res[1] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
+                    res[0] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
             return res
      
 
@@ -159,7 +160,6 @@ class App:
                     st.U_PAD + (square[1] * cell_size) - 10
                 )
         
-
 
     def getPieceSprite(self,
                  piece_number: int,

@@ -70,7 +70,6 @@ class Board():
         self.piece_numbers = {'p': 1, 'b': 2, 'n': 3, 
                               'r': 4, 'q': 5, 'k': 6}
         self.en_passant_target = (0, 0) if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
-
         self.populateBoard()
     
 
@@ -462,19 +461,23 @@ class Board():
                         if self.isValidOffset(r, f, offset):
                             move = (color, int(file), r, f, r - offset[1], f + offset[0])
                             if (self.isValidMove(move)):
-                                origin_square = [move[2], move[3]]
-                                target_square = [move[4], move[5]]
                                 tmp_origin = self.board[move[2], move[3]]
                                 tmp_target = self.board[move[4]][move[5]]
+                                tmp_king_origin = self.king_pos[color]
+
+                                if (abs(move[1]) == 6):
+                                    self.king_pos[color] = move[4], move[5]
 
                                 self.board[move[4]][move[5]] = tmp_origin
                                 self.board[move[2], move[3]] = 0
                                 if len(self.checkScan(color, self.king_pos[color][1], self.king_pos[color][0])) != 0:
                                     self.board[move[4]][move[5]] = tmp_target
                                     self.board[move[2]][move[3]] = tmp_origin
+                                    self.king_pos[color] = tmp_king_origin
                                     continue
                                 self.board[move[4]][move[5]] = tmp_target
                                 self.board[move[2]][move[3]] = tmp_origin
+                                self.king_pos[color] = tmp_king_origin
                                 legal_moves.append(move)
         return legal_moves
 
