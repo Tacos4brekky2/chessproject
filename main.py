@@ -23,22 +23,32 @@ class App:
         
         self.updateSprites()
  
-    def main(self):
-        # Event handler
+
+    # vvvvv Main vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+    def main(self) -> None:
+        """ Main loop.
+    """
         while self._running:
 
             for event in pygame.event.get():
-                #print(event)
                 self.onEvent(event)
+
             self.onLoop()
             self.render()
 
         self.cleanup()
 
-    def cleanup(self):
+
+    def cleanup(self) -> None:
         pygame.quit()
  
-    def onEvent(self, event):
+    def onEvent(
+        self,
+        event
+    ) -> None:
+        """ Event handler.
+    """
         match event.type:
             case pygame.QUIT:
                 self._running = False
@@ -51,10 +61,10 @@ class App:
                     self.playerBoardClick(mouse_pos)
 
 
-    def onLoop(self):
+    def onLoop(self) -> None:
         pass
 
-    def render(self):
+    def render(self) -> None:
         self.board_sprites.draw(self.screen)
 
         highlight_sprites = pygame.sprite.Group()
@@ -73,31 +83,16 @@ class App:
         self.gui_elements.draw(self.screen)
 
         pygame.display.update()
-    
-    def updateSprites(self):
-        self.gui_elements.empty()
-        self.board_sprites.empty()
-        self.piece_sprites.empty()
-        board_render = sprites.Board('tarzan')
-        self.board_sprites.add(board_render)
 
-        for i, rank in enumerate(self.state.board):
-            for j, piece in enumerate(rank):
-                if piece == 0:
-                    continue
-                else:
-                    coords = self.getTopLeft(1, (j, i))
-                    render = self.getPieceSprite(piece, coords)
-                    self.piece_sprites.add(render)
-    
-        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 70, st.U_PAD + 620)))
-        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
+    # ^^^^^ Main ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    
+
+    # vvvvv Player Functions vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
     def playerBoardClick(
             self,
             mouse_pos: tuple
-    ):
+    ) -> None:
         square = self.getClickedSquare(mouse_pos)
         # Select square.
         if (
@@ -115,26 +110,28 @@ class App:
                 self.state.movePiece(move)
                 self.updateSprites()
             self.initial_square = []
-    
-    
-   
 
+    # ^^^^^ Player Functions ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    
+    # vvvvv Coordinates vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
     def getClickedSquare(
             self,
             pos: tuple
-        ) -> list:
-            """Returns the board index of a square that was clicked.
+    ) -> list:
+        """Returns the board index of a square that was clicked.
     Output = [rank index, file index]
     """
             
-            res = [-1, -1]
-            for i, x in enumerate(st.board_x_bound):
-                if x < pos[0]:
-                    res[1] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
-            for i, y in enumerate(st.board_y_bound):
-                if y < pos[1]:
-                    res[0] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
-            return res
+        res = [-1, -1]
+        for i, x in enumerate(st.board_x_bound):
+            if x < pos[0]:
+                res[1] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
+        for i, y in enumerate(st.board_y_bound):
+            if y < pos[1]:
+                res[0] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
+        return res
      
 
     def getTopLeft(
@@ -162,10 +159,38 @@ class App:
                     st.U_PAD + (square[1] * cell_size) - 10
                 )
         
+    # ^^^^^ Coordinates ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
 
-    def getPieceSprite(self,
-                 piece_number: int,
-                 position: tuple):
+    # vvvvv Sprites vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+    def updateSprites(
+        self
+    ) -> None:
+        self.gui_elements.empty()
+        self.board_sprites.empty()
+        self.piece_sprites.empty()
+        board_render = sprites.Board('tarzan')
+        self.board_sprites.add(board_render)
+
+        for i, rank in enumerate(self.state.board):
+            for j, piece in enumerate(rank):
+                if piece == 0:
+                    continue
+                else:
+                    coords = self.getTopLeft(1, (j, i))
+                    render = self.getPieceSprite(piece, coords)
+                    self.piece_sprites.add(render)
+    
+        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 70, st.U_PAD + 620)))
+        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
+        
+
+    def getPieceSprite(
+        self,
+        piece_number: int,
+        position: tuple
+        ) -> object:
         piece_dict = {
             -1: sprites.Pawn(1, position),
             1: sprites.Pawn(0, position),
@@ -181,6 +206,9 @@ class App:
             6: sprites.King(0, position)
         }
         return piece_dict[piece_number]
+    
+    # ^^^^^ Sprites ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 if __name__ == "__main__" :
     pygame.init()
