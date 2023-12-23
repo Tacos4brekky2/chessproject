@@ -303,7 +303,7 @@ MOVE: {move}
         king_x = self.king_pos[color][1]
         king_y = self.king_pos[color][0]
 
-        self.checkScan(color, king_x, king_y)
+        check_list = self.checkScan(color, king_x, king_y)
 
         # Search for valid empty squares
         for offset in self.offsets[6]:
@@ -311,25 +311,29 @@ MOVE: {move}
                 (0 <= king_y - offset[1] <= 7) and
                 (0 <= king_x + offset[0] <= 7)
             ):
-                is_checked = self.checkScan(color, king_x + offset[0], king_y - offset[1])
+                candidate_scan = self.checkScan(color, king_x + offset[0], king_y - offset[1])
                 candidate_square = self.board[king_y - offset[1]][king_x + offset[0]]
                 if (
                     (candidate_square != 0) and
                     (king / candidate_square > 0)
                 ):
                     continue
-                if is_checked is False:
+                if len(candidate_scan) == 0:
                     return False
                 empty_check.append(offset)
                 #print(f'OFFSET: {offset} ===== {is_check} ====== KING: {king_x + offset[0], king_y - offset[1]}')
                 #print(empty_check)
-        if len(empty_check) > 0:
+        if (len(check_list) > 1):
             print("MATE")
             return True
         
-        
-        # Search for pieces that can cover the check
-        
+        # Search for pieces that can capture the piece delivering check
+        if (
+            (len(check_list) == 1) and
+            (self.checkScan(self.opposite_color[color], check_list[0][1], check_list[0][0]))  
+        ):
+            return False
+        return True
 
     
     def checkScan(self,
