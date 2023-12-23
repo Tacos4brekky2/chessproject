@@ -9,9 +9,8 @@ class Board():
     def __init__(self, 
                  fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.position = re.split('[/ ]', fen)
-        self.active_color = [0 if self.position[8] == 'w' else 1, 
-                            {0: "White's Turn", 1: "Black's Turn"}]
-        self.opposite_color = {0: 1, 1:0}
+        self.active_color = st.PLAYER_WHITE if self.position[8] == 'w' else st.PLAYER_BLACK
+        self.opposite_color = st.PLAYER_WHITE if self.active_color == st.PLAYER_BLACK else st.PLAYER_BLACK
         self.lines = {
             'up': [(0, x) for x in range(1, 8)],
             'down': [(0, -x) for x in range(1, 8)],
@@ -54,21 +53,36 @@ class Board():
                 self.lines['left_up'],
                 self.lines['left_down']]]
         }
-        self.in_check = [0, 0]  # 0 = White, 1 = Black
-        self.king_pos = [[7, 4], [0, 4]] # RF INDEX
-        self.checked_by = [[], []]
+        self.in_check = {
+            st.PLAYER_WHITE: 0,
+            st.PLAYER_BLACK: 0
+        }
+        self.king_pos = {
+            st.PLAYER_WHITE: [7, 4],
+            st.PLAYER_BLACK: [0, 4]
+        } # RF INDEX
+        self.checked_by = {
+            st.PLAYER_WHITE: [],
+            st.PLAYER_BLACK: []}
+        self.legal_moves = list()
 
         self.move_number = int(self.position[12]) - 1
         self.fifty_move_count = int(self.position[11])
-        self.can_castle = {(0, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
-                           (0, 'o-o-o'): True if 'Q' in self.position[9] else False,     # White queenside
-                           (1, 'o-o'): True if 'k' in self.position[9] else False,       # Black kingside
-                           (1, 'o-o-o'): True if 'q' in self.position[9] else False}     # Black queenside
+        self.can_castle = {
+            (st.PLAYER_WHITE, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
+            (st.PLAYER_WHITE, 'o-o-o'): True if 'Q' in self.position[9] else False,     # White queenside
+            (st.PLAYER_BLACK, 'o-o'): True if 'k' in self.position[9] else False,       # Black kingside
+            (st.PLAYER_BLACK, 'o-o-o'): True if 'q' in self.position[9] else False
+        }     # Black queenside
         self.board = np.zeros((8, 8))
-        self.file_letters = {'a': 0, 'b': 1, 'c': 2, 'd': 3,
-                             'e': 4, 'f': 5, 'g': 6, 'h': 7}
-        self.piece_numbers = {'p': 1, 'b': 2, 'n': 3, 
-                              'r': 4, 'q': 5, 'k': 6}
+        self.file_letters = {
+            'a': 0, 'b': 1, 'c': 2, 'd': 3,
+            'e': 4, 'f': 5, 'g': 6, 'h': 7
+        }
+        self.piece_numbers = {
+            'p': 1, 'b': 2, 'n': 3, 
+            'r': 4, 'q': 5, 'k': 6
+        }
         self.en_passant_target = (0, 0) if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
         self.populateBoard()
     
@@ -118,33 +132,30 @@ class Board():
             self,
             move: tuple
     ) -> None:
-        king_x = self.king_pos[move[0]][1]
-        king_y = self.king_pos[move[0]][0]
-        #print(f'KING POS: {self.king_pos[move[0]]}')
-        #print(self.checkScan(self.active_color[0], king_x, king_y))
-        if self.isValidMove(move):
-            tmp = self.board[move[4]][move[5]]
-            tmp_king_pos = [king_y, king_x]
-            self.board[move[4]][move[5]] = move[1]
-            self.board[move[2]][move[3]] = 0
+        king_x = self.king_pos[st.PLAYER_WHITE][1] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][1]
+        king_y = self.king_pos[st.PLAYER_WHITE][0] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][0]
+        tmp = self.board[move[4]][move[5]]
+        tmp_king_pos = [king_y, king_x]
+        self.board[move[4]][move[5]] = move[1]
+        self.board[move[2]][move[3]] = 0
+        if abs(move[1]) == 6:
+            king_x = move[5]
+            king_y = move[4]
+        if len(self.checkScan(move[0], king_x, king_y)) > 0:
+            self.board[move[4]][move[5]] = tmp
+            self.board[move[2]][move[3]] = move[1]
+            self.king_pos[move[0]] = tmp_king_pos
+        else:
             if abs(move[1]) == 6:
-                king_x = move[5]
-                king_y = move[4]
-            if len(self.checkScan(move[0], king_x, king_y)) > 0:
-                self.board[move[4]][move[5]] = tmp
-                self.board[move[2]][move[3]] = move[1]
-                self.king_pos[move[0]] = tmp_king_pos
-            else:
-                if abs(move[1]) == 6:
-                    self.king_pos[move[0]] = [move[4], move[5]]
-                self.in_check[move[0]] = 0
-                if len(self.checkScan(
-                    self.opposite_color[move[0]],
-                    self.king_pos[self.opposite_color[move[0]]][1],
-                    self.king_pos[self.opposite_color[move[0]]][0])
-                ) > 0:
-                    self.in_check[self.opposite_color[move[0]]] = 1
-                self.changeColor()
+                self.king_pos[move[0]] = [move[4], move[5]]
+            self.in_check[move[0]] = 0
+            if len(self.checkScan(
+                self.opposite_color,
+                self.king_pos[move[0] * -1][1],
+                self.king_pos[move[0] * -1][0])
+            ) > 0:
+                self.in_check[move[0] * -1] = 1
+            self.changeColor()
                 # print(f'''
 # ===== Board.movePiece() =====
 # WHITE KING POS (Ri, Fi): {self.king_pos[0]}
@@ -153,8 +164,8 @@ class Board():
 # MOVE: {move}
 # ===========================
 #             ''')
-                self.incrementFiftyMoveCounter(move)
-                self.incrementMove()
+            self.incrementFiftyMoveCounter(move)
+            self.incrementMove()
 
 
     """
@@ -178,7 +189,7 @@ class Board():
                     target: list
                     ) -> tuple:
         return (
-            self.active_color[0], 
+            self.active_color, 
             self.board[initial[0]][initial[1]],
             initial[0],
             initial[1],
@@ -192,8 +203,8 @@ class Board():
                     move: tuple) -> bool:
         # Trying to move other player's piece.
         if (
-            ((move[0] == 0) and (move[1] < 0)) or
-            ((move[0] == 1) and (move[1] > 0))
+            ((move[0] == st.PLAYER_WHITE) and (move[1] < 0)) or
+            ((move[0] == st.PLAYER_BLACK) and (move[1] > 0))
         ):
             return False
         offset = (move[5] - move[3], move[2] - move[4])
@@ -201,8 +212,8 @@ class Board():
         target_square = self.board[move[4]][move[5]]
         # Trying to capture a friendly piece.
         if (
-            ((move[0] == 0) and (target_square > 0)) or
-            ((move[0] == 1) and (target_square < 0))
+            ((move[0] == st.PLAYER_WHITE) and (target_square > 0)) or
+            ((move[0] == st.PLAYER_BLACK) and (target_square < 0))
         ):
             return False
         # Invalid pawn captures.
@@ -294,7 +305,7 @@ class Board():
         Can the check be blocked
     """
         empty_check = []
-        if color == 0:
+        if color == st.PLAYER_WHITE:
             king = 6
         else:
             king = -6
@@ -329,7 +340,7 @@ class Board():
         # Search for pieces that can capture the piece delivering check.
         if (
             (len(check_list) == 1) and
-            (self.checkScan(self.opposite_color[color], check_list[0][1], check_list[0][0]))  
+            (self.checkScan(color * -1, check_list[0][1], check_list[0][0]))  
         ):
             return False
         
@@ -385,7 +396,7 @@ class Board():
             #print(offset)
             target_square = self.board[king_y - offset[1]][king_x + offset[0]]
             rf_index = ((king_y - offset[1]), (king_x + offset[0]))
-            if target_square == (-3 if color == 0 else 3):
+            if target_square == (-3 if color == st.PLAYER_WHITE else 3):
                 #print("KNIGHT")
                 checked_by.append(rf_index)
 
@@ -398,15 +409,15 @@ class Board():
                         (0, 1), (0, -1), (1, 0), (-1, 0)
                     ]) and
                     (target_square in [
-                        6 if color == 1 else -6
+                        -6 if color == st.PLAYER_WHITE else 6
                     ])
                 ):
                     #print("KING")
                     checked_by.append(rf_index)
                     
                 if target_square in [
-                    -4 if color == 0 else 4,
-                    -5 if color == 0 else 5
+                    -4 if color == st.PLAYER_WHITE else 4,
+                    -5 if color == st.PLAYER_WHITE else 5
                 ]:
                     #print("RQ")
                     checked_by.append(rf_index)
@@ -422,15 +433,15 @@ class Board():
                         (1, 1), (1, -1), (-1, 1), (-1, -1)
                     ]) and
                     (target_square in [
-                        -6 if color == 0 else 6,
-                        -1 if color == 0 else 1
+                        -6 if color == st.PLAYER_WHITE else 6,
+                        -1 if color == st.PLAYER_WHITE else 1
                     ])
                 ):
                     #print("KP")
                     checked_by.append(rf_index)
                 elif target_square in [
-                    -2 if color == 0 else 2, 
-                    -5 if color == 0 else 5
+                    -2 if color == st.PLAYER_WHITE else 2, 
+                    -5 if color == st.PLAYER_WHITE else 5
                     ]:
                     #print('BQ')
                     checked_by.append(rf_index)
@@ -453,8 +464,8 @@ class Board():
         for r, rank in enumerate(self.board):
             for f, file in enumerate(rank):
                 if (
-                    ((color == 0) and (file > 0)) or
-                    ((color == 1) and (file < 0))
+                    ((color == st.PLAYER_WHITE) and (file > 0)) or
+                    ((color == st.PLAYER_BLACK) and (file < 0))
                 ):
                     offset_key = abs(file) if file != -1 else -1
                     for offset in self.offsets[offset_key]:
@@ -480,15 +491,24 @@ class Board():
                                 self.king_pos[color] = tmp_king_origin
                                 legal_moves.append(move)
         return legal_moves
+    
+    def startTurn(
+            self,
+            color: int
+    ) -> None:
+        self.active_color *= -1
+        self.opposite_color *= -1
+        self.legal_moves = self.getLegalMoves(color)
 
-        
+
 
     def changeColor(self):
-        self.active_color[0] = self.opposite_color[self.active_color[0]]
+        self.active_color *= -1
+        self.opposite_color *= -1
 
 
     def incrementMove(self):
-        if self.active_color[0] == 1:
+        if self.active_color == -1:
             self.move_number += 1
 
 

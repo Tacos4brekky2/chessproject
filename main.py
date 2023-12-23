@@ -49,26 +49,7 @@ class App:
                     (st.L_PAD <= mouse_pos[0] <= (st.L_PAD + st.WIDTH)) and
                     (st.U_PAD <= mouse_pos[1] <= (st.L_PAD + st.WIDTH))
                 ):
-                    square = self.getClickedSquare(mouse_pos)
-                    # Select square
-                    if (
-                        (len(self.initial_square) == 0) and
-                        (self.state.board[square[0]][square[1]] != 0)
-                    ):
-                        self.initial_square = square
-                    elif (square == self.initial_square):
-                        self.initial_square = []
-
-                    else:
-                        os.system('clear')
-                        move = self.state.indexToMove(self.initial_square, square)
-                        print(self.state.mateScan(move[0]))
-                        print(self.state.getLegalMoves(move[0]))
-                        self.state.movePiece(move)
-                        self.updateSprites()
-                        print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
-                        self.initial_square = []
-                        print(f'{self.state.active_color[1][self.state.active_color[0]]}')
+                    self.playerBoardClick(mouse_pos)
 
 
     def onLoop(self):
@@ -78,16 +59,14 @@ class App:
         self.board_sprites.draw(self.screen)
 
         highlight_sprites = pygame.sprite.Group()
-        if (
-            (len(self.initial_square) == 2)
-        ):
+        if (len(self.initial_square) == 2):
             coords = self.getTopLeft(1, (self.initial_square[1], self.initial_square[0]))
             highlight_sprites.add(sprites.Highlight('yellow', coords))
-        elif self.state.in_check[0] == 1:
-            coords = self.getTopLeft(1, (self.state.king_pos[0][1], self.state.king_pos[0][0]))
+        elif self.state.in_check[st.PLAYER_WHITE] == 1:
+            coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_WHITE][1], self.state.king_pos[st.PLAYER_WHITE][0]))
             highlight_sprites.add(sprites.Highlight('red', coords))
-        elif self.state.in_check[1] == 1:
-            coords = self.getTopLeft(1, (self.state.king_pos[1][1], self.state.king_pos[1][0]))
+        elif self.state.in_check[st.PLAYER_BLACK] == 1:
+            coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_BLACK][1], self.state.king_pos[st.PLAYER_BLACK][0]))
             highlight_sprites.add(sprites.Highlight('red', coords))
         highlight_sprites.draw(self.screen)
 
@@ -114,6 +93,35 @@ class App:
     
         self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 70, st.U_PAD + 620)))
         self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
+
+    
+    def playerBoardClick(
+            self,
+            mouse_pos: tuple
+    ):
+        square = self.getClickedSquare(mouse_pos)
+        # Select square.
+        if (
+            (len(self.initial_square) == 0) and
+            (self.state.board[square[0]][square[1]] != 0)
+        ):
+            self.initial_square = square
+        elif (square == self.initial_square):
+            self.initial_square = []
+        # Attempt to execute move.
+        else:
+            os.system('clear')
+            move = self.state.indexToMove(self.initial_square, square)
+            legal_moves = self.state.getLegalMoves(move[0])
+            print(self.state.mateScan(move[0]))
+            if move in legal_moves:
+                print(f'{self.state.active_color}')
+                self.state.movePiece(move)
+                self.updateSprites()
+                print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
+                self.initial_square = []
+            self.initial_square = []
+    
     
    
 
