@@ -3,6 +3,7 @@ import regex as re
 import config
 import setup as st
 import os
+from collections import defaultdict
 
 
 class Board():
@@ -83,8 +84,10 @@ class Board():
             'p': 1, 'b': 2, 'n': 3, 
             'r': 4, 'q': 5, 'k': 6
         }
+        self.function_count = defaultdict(int)
         self.en_passant_target = (0, 0) if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
         self.populateBoard()
+        self.startTurn(self.active_color)
     
 
     """
@@ -132,6 +135,7 @@ class Board():
             self,
             move: tuple
     ) -> None:
+        self.function_count['board.movePiece'] += 1
         king_x = self.king_pos[st.PLAYER_WHITE][1] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][1]
         king_y = self.king_pos[st.PLAYER_WHITE][0] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][0]
         tmp = self.board[move[4]][move[5]]
@@ -155,7 +159,8 @@ class Board():
                 self.king_pos[move[0] * -1][0])
             ) > 0:
                 self.in_check[move[0] * -1] = 1
-            self.changeColor()
+            self.incrementFiftyMoveCounter(tmp)
+            self.startTurn(move[0] * -1)
                 # print(f'''
 # ===== Board.movePiece() =====
 # WHITE KING POS (Ri, Fi): {self.king_pos[0]}
@@ -164,8 +169,6 @@ class Board():
 # MOVE: {move}
 # ===========================
 #             ''')
-            self.incrementFiftyMoveCounter(move)
-            self.incrementMove()
 
 
     """
@@ -188,6 +191,8 @@ class Board():
                     initial: list,
                     target: list
                     ) -> tuple:
+        
+        self.function_count['board.indexToMove'] += 1
         return (
             self.active_color, 
             self.board[initial[0]][initial[1]],
@@ -195,20 +200,51 @@ class Board():
             initial[1],
             target[0],
             target[1]
-            )
+        )
+    
+
+    def getLegalMoves(
+            self,
+            color: int
+    ) -> list:
+        """ Returns all of a player's legal move tuples.
+    """
+        self.function_count['board.getLegalMoves'] += 1
+        legal_moves = list()
+        for r, rank in enumerate(self.board):
+            for f, piece in enumerate(rank):
+                if (piece / color > 0):
+                    offset_key = abs(piece) if piece != st.BLACK_PAWN else -1
+                    for offset in self.offsets[offset_key]:
+                        if self.isValidOffset(r, f, offset):
+                            move = (color, int(piece), r, f, r - offset[1], f + offset[0])
+                            if (self.isValidMove(move)):
+                                tmp_origin = self.board[move[2], move[3]]
+                                tmp_target = self.board[move[4]][move[5]]
+                                tmp_king_origin = self.king_pos[color]
+
+                                if (abs(move[1]) == 6):
+                                    self.king_pos[color] = move[4], move[5]
+
+                                self.board[move[4]][move[5]] = tmp_origin
+                                self.board[move[2], move[3]] = 0
+                                if len(self.checkScan(color, self.king_pos[color][1], self.king_pos[color][0])) != 0:
+                                    self.board[move[4]][move[5]] = tmp_target
+                                    self.board[move[2]][move[3]] = tmp_origin
+                                    self.king_pos[color] = tmp_king_origin
+                                    continue
+                                self.board[move[4]][move[5]] = tmp_target
+                                self.board[move[2]][move[3]] = tmp_origin
+                                self.king_pos[color] = tmp_king_origin
+                                legal_moves.append(move)
+        print(legal_moves)
+        return legal_moves
     
     
 
     def isValidMove(self,
                     move: tuple) -> bool:
-        # Trying to move other player's piece.
-        if (
-            ((move[0] == st.PLAYER_WHITE) and (move[1] < 0)) or
-            ((move[0] == st.PLAYER_BLACK) and (move[1] > 0))
-        ):
-            return False
-        offset = (move[5] - move[3], move[2] - move[4])
-        offset_key = abs(move[1]) if move[1] != -1 else -1
+        self.function_count['board.isValidMove'] += 1
         target_square = self.board[move[4]][move[5]]
         # Trying to capture a friendly piece.
         if (
@@ -216,18 +252,13 @@ class Board():
             ((move[0] == st.PLAYER_BLACK) and (target_square < 0))
         ):
             return False
+        offset = (move[5] - move[3], move[2] - move[4])
+        offset_key = abs(move[1]) if move[1] != st.BLACK_PAWN else -1
         # Invalid pawn captures.
         if (
             (abs(move[1]) == 1) and
-            ((offset[0] != 0) and (offset[1] != 0)) and
-            (target_square == 0)
-        ):
-            return False
-        # Forward pawn captures.
-        elif (
-            (abs(move[1]) == 1) and
-            (offset[0] == 0) and
-            (target_square != 0)
+            ((offset[0] != 0) and (target_square == 0)) or
+            ((offset [0] == 0) and (target_square != 0))
         ):
             return False
         if offset in self.offsets[offset_key]:
@@ -250,6 +281,8 @@ class Board():
         - Rook
         - Queen
     """
+        
+        self.function_count['board.willNotCollide'] += 1
         if move[1] == 3:
             return True
         path = []
@@ -284,68 +317,13 @@ class Board():
     ) -> bool:
         """ Returns true if an offset moves a piece within the board
     """
+        self.function_count['board.isValidOffset'] += 1
         if (
             (0 <= (piece_rank - offset[1]) <= 7) and
             (0 <= (piece_file + offset[0]) <= 7)
         ):
             return True
         return False
-
-
-    def mateScan(self,
-             color: int
-    ) -> bool:
-        """UNFINISHED:
-        Calls checkScan() for every empty square around the king.
-
-        - Returns True if the king can't make a move.
-
-        ADD:
-        Find a player's legal moves(?)
-        Can the check be blocked
-    """
-        empty_check = []
-        if color == st.PLAYER_WHITE:
-            king = 6
-        else:
-            king = -6
-        king_x = self.king_pos[color][1]
-        king_y = self.king_pos[color][0]
-
-        check_list = self.checkScan(color, king_x, king_y)
-
-        # Search for valid empty squares
-        for offset in self.offsets[6]:
-            if (
-                (0 <= king_y - offset[1] <= 7) and
-                (0 <= king_x + offset[0] <= 7)
-            ):
-                candidate_scan = self.checkScan(color, king_x + offset[0], king_y - offset[1])
-                candidate_square = self.board[king_y - offset[1]][king_x + offset[0]]
-                if (
-                    (candidate_square != 0) and
-                    (king / candidate_square > 0)
-                ):
-                    continue
-                if len(candidate_scan) == 0:
-                    return False
-                empty_check.append(offset)
-                #print(f'OFFSET: {offset} ===== {is_check} ====== KING: {king_x + offset[0], king_y - offset[1]}')
-                #print(empty_check)
-        # Double check checkmate
-        if (len(check_list) > 1):
-            print("MATE")
-            return True
-        
-        # Search for pieces that can capture the piece delivering check.
-        if (
-            (len(check_list) == 1) and
-            (self.checkScan(color * -1, check_list[0][1], check_list[0][0]))  
-        ):
-            return False
-        
-        # Search for pieces that can cover the check.
-        return True
 
     
     def checkScan(self,
@@ -358,6 +336,7 @@ class Board():
         Starts from king and moves out.
         Iterates over each vector individually.
     """
+        self.function_count['board.checkScan'] += 1
         diagonal = [[]] * 4
         straight = [[]] * 4
         knight = list()
@@ -452,69 +431,34 @@ class Board():
         
         #print('==================')
     
-
-
-    def getLegalMoves(
-            self,
-            color: int
-    ) -> list:
-        """ Returns all of a player's legal move tuples.
-    """
-        legal_moves = list()
-        for r, rank in enumerate(self.board):
-            for f, file in enumerate(rank):
-                if (
-                    ((color == st.PLAYER_WHITE) and (file > 0)) or
-                    ((color == st.PLAYER_BLACK) and (file < 0))
-                ):
-                    offset_key = abs(file) if file != -1 else -1
-                    for offset in self.offsets[offset_key]:
-                        if self.isValidOffset(r, f, offset):
-                            move = (color, int(file), r, f, r - offset[1], f + offset[0])
-                            if (self.isValidMove(move)):
-                                tmp_origin = self.board[move[2], move[3]]
-                                tmp_target = self.board[move[4]][move[5]]
-                                tmp_king_origin = self.king_pos[color]
-
-                                if (abs(move[1]) == 6):
-                                    self.king_pos[color] = move[4], move[5]
-
-                                self.board[move[4]][move[5]] = tmp_origin
-                                self.board[move[2], move[3]] = 0
-                                if len(self.checkScan(color, self.king_pos[color][1], self.king_pos[color][0])) != 0:
-                                    self.board[move[4]][move[5]] = tmp_target
-                                    self.board[move[2]][move[3]] = tmp_origin
-                                    self.king_pos[color] = tmp_king_origin
-                                    continue
-                                self.board[move[4]][move[5]] = tmp_target
-                                self.board[move[2]][move[3]] = tmp_origin
-                                self.king_pos[color] = tmp_king_origin
-                                legal_moves.append(move)
-        return legal_moves
     
     def startTurn(
             self,
             color: int
     ) -> None:
-        self.active_color *= -1
-        self.opposite_color *= -1
+        os.system('clear')
+        print(f'FUNCTION COUNT: {self.function_count}')
+        self.function_count = defaultdict(int)
+        if color == st.PLAYER_WHITE:
+            self.move_number += 1
+        self.active_color = color
+        self.opposite_color = color * -1
         self.legal_moves = self.getLegalMoves(color)
 
+        print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}')
+        if len(self.legal_moves) == 0:
+            if self.in_check[color] == 1:
+                print("MATE")
+            else:
+                print("STALEMATE")
 
 
-    def changeColor(self):
-        self.active_color *= -1
-        self.opposite_color *= -1
-
-
-    def incrementMove(self):
-        if self.active_color == -1:
-            self.move_number += 1
-
-
-    def incrementFiftyMoveCounter(self,
-                              playermove: tuple):
-        if self.board[playermove[4]][playermove[5]] != 0:
+    def incrementFiftyMoveCounter(
+            self,
+            target_piece: int
+        ) -> None:
+        self.function_count['board.incrementFiftyMoveCounter'] += 1
+        if target_piece != 0:
             self.fifty_move_count = 0
         else:
             self.fifty_move_count += 1

@@ -21,7 +21,6 @@ class App:
         self.board_sprites = pygame.sprite.Group()
         self.gui_elements = pygame.sprite.Group()  
         
-        
         self.updateSprites()
  
     def main(self):
@@ -110,16 +109,11 @@ class App:
             self.initial_square = []
         # Attempt to execute move.
         else:
-            os.system('clear')
             move = self.state.indexToMove(self.initial_square, square)
-            legal_moves = self.state.getLegalMoves(move[0])
-            print(self.state.mateScan(move[0]))
-            if move in legal_moves:
-                print(f'{self.state.active_color}')
+            #print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
+            if move in self.state.legal_moves:
                 self.state.movePiece(move)
                 self.updateSprites()
-                print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
-                self.initial_square = []
             self.initial_square = []
     
     
