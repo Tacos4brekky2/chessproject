@@ -91,7 +91,7 @@ class Board():
 
 
     def populateBoard(
-            self
+        self
     ) -> None:
         """ Generates the initial board position on start
     ** Single-use, modifies board array in place
@@ -113,44 +113,31 @@ class Board():
 
  
     def movePiece(
-            self,
-            move: tuple
+        self,
+        move: tuple
     ) -> None:
-        """ Attempts to execute a player's move.
+        """ Executes a player's move.
     """
         self.function_count['board.movePiece'] += 1
 
-        king_x = self.king_pos[st.PLAYER_WHITE][1] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][1]
-        king_y = self.king_pos[st.PLAYER_WHITE][0] if move[0] == st.PLAYER_WHITE else self.king_pos[st.PLAYER_BLACK][0]
-        tmp = self.board[move[4]][move[5]]
-        tmp_king_pos = [king_y, king_x]
+        target_piece = self.board[move[4]][move[5]]
+        self.incrementFiftyMoveCounter(target_piece)
         self.board[move[4]][move[5]] = move[1]
         self.board[move[2]][move[3]] = 0
-        if abs(move[1]) == 6:
-            king_x = move[5]
-            king_y = move[4]
-        if len(self.checkScan(move[0], king_x, king_y)) > 0:
-            self.board[move[4]][move[5]] = tmp
-            self.board[move[2]][move[3]] = move[1]
-            self.king_pos[move[0]] = tmp_king_pos
-        else:
-            if abs(move[1]) == 6:
-                self.king_pos[move[0]] = [move[4], move[5]]
-            self.in_check[move[0]] = 0
-            if len(self.checkScan(
-                self.opposite_color,
-                self.king_pos[move[0] * -1][1],
-                self.king_pos[move[0] * -1][0])
-            ) > 0:
-                self.in_check[move[0] * -1] = 1
-            self.incrementFiftyMoveCounter(tmp)
-            self.startTurn(move[0] * -1)
+        self.in_check[move[0]] = 0
+        if len(self.checkScan(
+            move[0] * -1,
+            self.king_pos[move[0] * -1][1],
+            self.king_pos[move[0] * -1][0])
+        ) > 0:
+            self.in_check[move[0] * -1] = 1
+        self.startTurn(move[0] * -1)
 
     
     def indexToMove(
-            self,
-            initial: list,
-            target: list
+        self,
+        initial: list,
+        target: list
     ) -> tuple:
         """ Generates a move tuple from rank file index pairs
     Input:
@@ -179,8 +166,8 @@ class Board():
     
 
     def getLegalMoves(
-            self,
-            color: int
+        self,
+        color: int
     ) -> list:
         """ Generates a list of legal moves for a given player.
     """
@@ -218,8 +205,8 @@ class Board():
     
 
     def isValidMove(
-            self,
-            move: tuple
+        self,
+        move: tuple
     ) -> bool:
         """ Basic checks for invalid moves.
     """
@@ -400,11 +387,12 @@ class Board():
     
     
     def startTurn(
-            self,
-            color: int
+        self,
+        color: int
     ) -> None:
         """ Switches whose turn it is
     """
+        
         os.system('clear')
         print(f'FUNCTION COUNT: {self.function_count}')
         self.function_count = defaultdict(int)
@@ -423,12 +411,13 @@ class Board():
 
 
     def incrementFiftyMoveCounter(
-            self,
-            target_piece: int
+        self,
+        target_piece: int
     ) -> None:
         """ Increments fifty move counter if no piece was captured.
     """
         self.function_count['board.incrementFiftyMoveCounter'] += 1
+
         if target_piece != 0:
             self.fifty_move_count = 0
         else:
