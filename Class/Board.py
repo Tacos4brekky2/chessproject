@@ -45,7 +45,7 @@ class Board():
                 self.lines['left_down'],
             6: [(0, 1), (1, 1), (1, 0), (1, -1),                # King
                 (0, -1), (-1, -1), (-1, 0), (-1, 1)],
-            7: [[self.lines['up'],                               # Queen
+            7: [[self.lines['up'],                              # Check scan
                 self.lines['down'],
                 self.lines['right'],
                 self.lines['left']],
@@ -131,7 +131,7 @@ class Board():
             if abs(move[1]) == 6:
                 king_x = move[5]
                 king_y = move[4]
-            if self.checkScan('quick', move[0], king_x, king_y):
+            if len(self.checkScan(move[0], king_x, king_y)) > 0:
                 self.board[move[4]][move[5]] = tmp
                 self.board[move[2]][move[3]] = move[1]
                 self.king_pos[move[0]] = tmp_king_pos
@@ -139,7 +139,11 @@ class Board():
                 if abs(move[1]) == 6:
                     self.king_pos[move[0]] = [move[4], move[5]]
                 self.in_check[move[0]] = 0
-                if self.checkScan('quick', self.opposite_color[move[0]], self.king_pos[self.opposite_color[move[0]]][1], self.king_pos[self.opposite_color[move[0]]][0]):
+                if len(self.checkScan(
+                    self.opposite_color[move[0]],
+                    self.king_pos[self.opposite_color[move[0]]][1],
+                    self.king_pos[self.opposite_color[move[0]]][0])
+                ) > 0:
                     self.in_check[self.opposite_color[move[0]]] = 1
                 self.changeColor()
                 print(f'''
@@ -271,8 +275,8 @@ MOVE: {move}
         """ Returns true if an offset moves a piece within the board
     """
         if (
-            (0 <= (piece_rank - offset[1] <= 7) and
-            (0 <= (piece_file + offset[0]) <= 7))
+            (0 <= (piece_rank - offset[1]) <= 7) and
+            (0 <= (piece_file + offset[0]) <= 7)
         ):
             return True
         return False
@@ -299,13 +303,15 @@ MOVE: {move}
         king_x = self.king_pos[color][1]
         king_y = self.king_pos[color][0]
 
+        self.checkScan(color, king_x, king_y)
+
         # Search for valid empty squares
         for offset in self.offsets[6]:
             if (
                 (0 <= king_y - offset[1] <= 7) and
                 (0 <= king_x + offset[0] <= 7)
             ):
-                is_checked = self.checkScan('quick', color, king_x + offset[0], king_y - offset[1])
+                is_checked = self.checkScan(color, king_x + offset[0], king_y - offset[1])
                 candidate_square = self.board[king_y - offset[1]][king_x + offset[0]]
                 if (
                     (candidate_square != 0) and
@@ -321,111 +327,114 @@ MOVE: {move}
             print("MATE")
             return True
         
+        
         # Search for pieces that can cover the check
         
 
     
-# TESTED: Works with all pieces from every direction.
     def checkScan(self,
-                  mode: str,
                   color: int,
                   king_x: list,
                   king_y: list
-    ) -> bool:
+    ) -> list:
+        """ Scans for opponent's pieces using their respective movement vectors.
 
-        diagonal = [[], [], [], []]
-        straight = [[], [], [], []]
-        knight = []
+        Starts from king and moves out.
+        Iterates over each vector individually.
+    """
+        diagonal = [[]] * 4
+        straight = [[]] * 4
+        knight = list()
+        print(diagonal, straight, knight)
 
-        for i, x in enumerate(self.offsets[7][1]):
-            for offset in x:
+        print(self.offsets[7][1])
+        for i, vector in enumerate(self.offsets[7][1]):
+            tmp = []
+            for offset in vector:
                 if (
-                    ((offset[0] != 0) and (offset[1] != 0)) and
-                    (-1 < king_y - offset[1] < 8) and
-                    (-1 < king_x + offset[0] < 8)
+                    (self.isValidOffset(king_y, king_x, offset))
                 ):
-                    diagonal[i].append(offset)
-        for i, x in enumerate(self.offsets[7][0]):
-            for offset in x:
+                    tmp.append(offset)
+            diagonal[i] = tmp
+        for i, vector in enumerate(self.offsets[7][0]):
+            tmp = []
+            for offset in vector:
                 if (
-                    ((offset[0] == 0) and (-1 < king_y - offset[1] < 8)) or 
-                    ((offset[1] == 0) and (-1 < king_x + offset[0] < 8))
+                    (self.isValidOffset(king_y, king_x, offset))
                 ):
-                    straight[i].append(offset)
-        for offset in self.offsets[3]:
+                    tmp.append(offset)
+            straight[i] = tmp
+        for offset in self.offsets[st.WHITE_KNIGHT]:
+            
             if (
-                (-1 < king_y - offset[1] < 8) and
-                (-1 < king_x + offset[0] < 8)
+                (self.isValidOffset(king_y, king_x, offset))
             ):
                 knight.append(offset)
-#         print(f'''
-# ===== Board.checkScan() =====
-# {self.active_color[1][color]} CHECK LIST
-# DIAGONAL: {diagonal}
-# STRAIGHT: {straight}
-# KNIGHT: {knight}
-# ''')
+        print(f'''
+===== Board.checkScan() =====
+{self.active_color[1][color]} CHECK LIST
+DIAGONAL: {diagonal}
+STRAIGHT: {straight}
+KNIGHT: {knight}
+''')
         checked_by = []
-        for x in knight:
-            if self.board[king_y - x[1]][king_x + x[0]] == (-3 if color == 0 else 3):
+        for offset in knight:
+            print(offset)
+            target_square = self.board[king_y - offset[1]][king_x + offset[0]]
+            rf_index = ((king_y - offset[1]), (king_x + offset[0]))
+            if target_square == (-3 if color == 0 else 3):
                 print("KNIGHT")
-                if mode == 'quick':
-                    return True
-                checked_by.append(x)
+                checked_by.append(rf_index)
 
-        for x in straight:
-            for offset in x:
+        for vector in straight:
+            for offset in vector:
+                target_square = self.board[king_y - offset[1]][king_x + offset[0]]
+                rf_index = ((king_y - offset[1]), (king_x + offset[0]))
                 if (
-                    (offset in [(0, 1), (0, -1), (1, 0), (-1, 0)]) and
-                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6 if color == 1 else -6])
+                    (offset in [
+                        (0, 1), (0, -1), (1, 0), (-1, 0)
+                    ]) and
+                    (target_square in [
+                        6 if color == 1 else -6
+                    ])
                 ):
                     print("KING")
-                    if mode == 'quick':
-                        return True
-                    checked_by.append(x)
+                    checked_by.append(rf_index)
                     
-                elif self.board[king_y - offset[1]][king_x + offset[0]] in [
-                    -4 if color == 0 else 4, -5 if color == 0 else 5
+                if target_square in [
+                    -4 if color == 0 else 4,
+                    -5 if color == 0 else 5
                 ]:
                     print("RQ")
-                    if mode == 'quick':
-                        return True
-                    checked_by.append(x)
-                elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
+                    checked_by.append(rf_index)
+                elif target_square != 0:
                     break
 
-        for x in diagonal:
-            for offset in x:
+        for vector in diagonal:
+            for offset in vector:
+                target_square = self.board[king_y - offset[1]][king_x + offset[0]]
+                rf_index = ((king_y - offset[1]), (king_x + offset[0]))
                 if (
-                    (offset in [(1, 1), (1, -1), (-1, 1), (-1, -1)]) and
-                    (self.board[king_y - offset[1]][king_x + offset[0]] in [6 if color == 1 else -6])
-                ):
-                    print("KING")
-                    if mode == 'quick':
-                        return True
-                    checked_by.append(x)
-                elif (
                     (offset in [
-                        (-1, 1) if color == 0 else (-1, -1),
-                        (1, 1) if color == 0 else (1, -1)
+                        (1, 1), (1, -1), (-1, 1), (-1, -1)
                     ]) and
-                    (self.board[king_y - offset[1]][king_x + offset[0]] == (-1 if color == 0 else 1))
+                    (target_square in [
+                        -6 if color == 0 else 6,
+                        -1 if color == 0 else 1
+                    ])
                 ):
-                    print('PAWN')
-                    if mode == 'quick':
-                        return True
-                    checked_by.append(x)
-                elif self.board[king_y - offset[1]][king_x + offset[0]] in [
-                    -2 if color == 0 else 2, -5 if color == 0 else 5
-                ]:
+                    print("KP")
+                    checked_by.append(rf_index)
+                elif target_square in [
+                    -2 if color == 0 else 2, 
+                    -5 if color == 0 else 5
+                    ]:
                     print('BQ')
-                    if mode == 'quick':
-                        return True
-                    checked_by.append(x)
-
-                elif self.board[king_y - offset[1]][king_x + offset[0]] != 0:
+                    checked_by.append(rf_index)
+                elif target_square != 0:
                     break
-        return False
+        print(f'CHECK LIIIIIIST: {checked_by}')
+        return checked_by
         
         #print('==================')
 

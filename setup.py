@@ -19,6 +19,24 @@ clock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+# PIECES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+WHITE_PAWN = 1
+BLACK_PAWN = -1
+WHITE_BISHOP = 2
+BLACK_BISHOP = -2
+WHITE_KNIGHT = 3
+BLACK_KNIGHT = -3
+WHITE_ROOK = 4
+BLACK_ROOK = -4
+WHITE_QUEEN = 5
+BLACK_QUEEN = -5
+WHITE_KING = 6
+BLACK_KING = -6
+
+# PLAYER COLORS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PLAYER_WHITE = 1
+PLAYER_BLACK = -1
+
 # SKINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PIECES
 b_bishop = pygame.image.load('Assets/Pieces/black_bishop.png')
