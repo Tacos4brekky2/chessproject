@@ -105,7 +105,6 @@ class App:
         # Attempt to execute move.
         else:
             move = self.state.indexToMove(self.initial_square, square)
-            #print(f'\nSELECTED SQUARE: {self.initial_square}\nTARGET SQUARE: {square}\nMOVE: {move}\nMOVE NUMBER: {self.state.move_number}\nFIFTY MOVE: {self.state.fifty_move_count}')
             if move in self.state.legal_moves:
                 self.state.movePiece(move)
                 self.updateSprites()

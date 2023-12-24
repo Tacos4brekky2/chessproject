@@ -62,11 +62,7 @@ class Board():
             st.PLAYER_WHITE: [7, 4],
             st.PLAYER_BLACK: [0, 4]
         } # RF INDEX
-        self.checked_by = {
-            st.PLAYER_WHITE: [],
-            st.PLAYER_BLACK: []}
         self.legal_moves = list()
-
         self.move_number = int(self.position[12]) - 1
         self.fifty_move_count = int(self.position[11])
         self.can_castle = {
@@ -85,7 +81,8 @@ class Board():
             'r': 4, 'q': 5, 'k': 6
         }
         self.function_count = defaultdict(int)
-        self.en_passant_target = (0, 0) if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
+        self.en_passant_target = [-1, -1] if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
+
         self.populateBoard()
         self.startTurn(self.active_color)
 
@@ -131,6 +128,21 @@ class Board():
             self.king_pos[move[0] * -1][0])
         ) > 0:
             self.in_check[move[0] * -1] = 1
+        if (
+            (abs(move[1]) == 1) and
+            (self.en_passant_target == [(move[4] + move[0]), move[5]])
+        ):
+            self.board[(move[4] + move[0])][move[5]] = 0
+        if (
+            (abs(move[1]) == st.WHITE_PAWN) and
+            (abs((move[2] - move[4])) == 2)
+        ):
+            self.en_passant_target = [move[4], move[5]]
+        else:
+            self.en_passant_target = [-1, -1]
+        if abs(move[1]) == 6:
+            self.king_pos[move[0]] = [move[4], move[5]]
+
         self.startTurn(move[0] * -1)
 
     
@@ -221,11 +233,18 @@ class Board():
             return False
         offset = (move[5] - move[3], move[2] - move[4])
         offset_key = abs(move[1]) if move[1] != st.BLACK_PAWN else -1
-        # Invalid pawn captures.
+        # Forward pawn captures.
         if (
             (abs(move[1]) == 1) and
-            ((offset[0] != 0) and (target_square == 0)) or
-            ((offset [0] == 0) and (target_square != 0))
+            (offset [0] == 0) and 
+            (target_square != 0)
+        ):
+            return False
+        elif (
+            (abs(move[1]) == 1) and
+            (offset[0] != 0) and 
+            (target_square == 0) and
+            (self.en_passant_target != [move[4] + move[0], move[5]])
         ):
             return False
         if offset in self.offsets[offset_key]:
@@ -393,7 +412,7 @@ class Board():
         """ Switches whose turn it is
     """
         
-        os.system('clear')
+        #os.system('clear')
         print(f'FUNCTION COUNT: {self.function_count}')
         self.function_count = defaultdict(int)
         if color == st.PLAYER_WHITE:
@@ -402,7 +421,7 @@ class Board():
         self.opposite_color = color * -1
         self.legal_moves = self.getLegalMoves(color)
 
-        print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}')
+        print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}\nEN-PASSANT TARGET: {self.en_passant_target}')
         if len(self.legal_moves) == 0:
             if self.in_check[color] == 1:
                 print("MATE")
