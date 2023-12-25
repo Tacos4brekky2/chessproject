@@ -10,8 +10,9 @@ import Class.Clock as clk
 
 
 class Board():
-    def __init__(self, 
-                 fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
+    def __init__(self,
+                 time_control: tuple,
+                 fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.position = re.split('[/ ]', fen)
         self.active_color = st.PLAYER_WHITE if self.position[8] == 'w' else st.PLAYER_BLACK
         self.opposite_color = st.PLAYER_WHITE if self.active_color == st.PLAYER_BLACK else st.PLAYER_BLACK
@@ -86,13 +87,16 @@ class Board():
         self.function_count = defaultdict(int)
         self.en_passant_target = [-1, -1] if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
         self.clock = {
-            st.PLAYER_WHITE: config.white_time,
-            st.PLAYER_BLACK: config.black_time
+            st.PLAYER_WHITE: time_control[0],
+            st.PLAYER_BLACK: time_control[1]
         }
         self.score = {
             st.PLAYER_WHITE: 0,
             st.PLAYER_BLACK: 0
         }
+
+        # 1 if white wins, -1 if black wins
+        self.final_result = 0
 
         self.populateBoard()
         self.player_clock = clk.PlayerClock(60, st.PLAYER_WHITE)
@@ -438,9 +442,9 @@ class Board():
         print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}\nEN-PASSANT TARGET: {self.en_passant_target}')
         if len(self.legal_moves) == 0:
             if self.in_check[color] == 1:
-                print("MATE")
+                self.final_result = st.results['checkmate']
             else:
-                print("STALEMATE")
+                self.final_result = st.results['stalemate']
 
 
     def incrementFiftyMoveCounter(

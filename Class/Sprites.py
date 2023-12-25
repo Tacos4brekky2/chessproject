@@ -4,7 +4,6 @@ import setup as st
 
 
 
-
 class Pawn(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
@@ -149,3 +148,18 @@ class PlayerClock(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.topleft = coords
+
+
+# Menu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+menu_list = {
+    'main menu': [0, [
+        PlayerClock('default_black', (st.L_PAD + 615, st.U_PAD + 135)), 
+        PlayerClock('default_black', (st.L_PAD + 615, st.U_PAD + 205))
+    ]
+],
+    'board': [1, [
+        Board('tarzan')
+    ]
+]
+}
+# Menu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

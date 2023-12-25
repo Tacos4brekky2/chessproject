@@ -15,19 +15,21 @@ class App(Thread):
     def __init__(self):
         super().__init__()
         self._running = True
+        self.in_game = False
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.state = board.Board(cf.starting_position)
+        self.menu = 0
         self.initial_square = []
         self.perspective = 0
-        self.clock_font = pygame.font.SysFont('Comic Sans', 30)
-        self.white_time = self.state.clock[st.PLAYER_WHITE]
-        self.black_time = self.state.clock[st.PLAYER_BLACK]
-        
+
+        self.gui_elements = pygame.sprite.Group()
         self.piece_sprites = pygame.sprite.Group()
         self.board_sprites = pygame.sprite.Group()
-        self.gui_elements = pygame.sprite.Group()
+        self.state = object
         self.clock = pygame.time.Clock()
-        
+        self.player_clock_font = pygame.font.SysFont('Comic Sans', 30)
+        self.white_time = int
+        self.black_time = int
+        self.startGame((120, 120))
         self.updateSprites()
  
 
@@ -40,6 +42,7 @@ class App(Thread):
             #start_time = time.time() # start time of the loop
 
             for event in pygame.event.get():
+                #print(event)
                 self.onEvent(event)
 
             self.onLoop()
@@ -69,17 +72,23 @@ class App(Thread):
 
 
     def onLoop(self) -> None:
-        self.clock.tick(60)
+        self.clock.tick(st.FPS)
         self.state.clock[st.PLAYER_WHITE] = self.state.player_clock.white_time
         self.white_time = self.state.player_clock.white_time
         self.state.clock[st.PLAYER_BLACK] = self.state.player_clock.black_time
         self.black_time = self.state.player_clock.black_time
 
+        if self.state.final_result == st.results['checkmate']:
+            self.updateSprites()
+            pygame.mixer.Sound.play(st.audio_checkmate)
+            time.sleep(2)
+            self.cleanup()
+
 
     def render(self) -> None:
         self.board_sprites.draw(self.screen)
-        white_clock_text = self.clock_font.render(str(self.white_time), False, (255, 255, 255))
-        black_clock_text = self.clock_font.render(str(self.black_time), False, (255, 255, 255))
+        white_clock_text = self.player_clock_font.render(str(self.white_time), False, (255, 255, 255))
+        black_clock_text = self.player_clock_font.render(str(self.black_time), False, (255, 255, 255))
 
         highlight_sprites = pygame.sprite.Group()
         if (len(self.initial_square) == 2):
@@ -91,17 +100,32 @@ class App(Thread):
         elif self.state.in_check[st.PLAYER_BLACK] == 1:
             coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_BLACK][1], self.state.king_pos[st.PLAYER_BLACK][0]))
             highlight_sprites.add(sprites.Highlight('red', coords))
-        highlight_sprites.draw(self.screen)
 
-        self.piece_sprites.draw(self.screen)
         self.gui_elements.draw(self.screen)
-        self.screen.blit(white_clock_text, (st.L_PAD + 130, st.U_PAD + 615))
-        self.screen.blit(black_clock_text, (st.L_PAD + 440, st.U_PAD + 615))
+        highlight_sprites.draw(self.screen)
+        self.piece_sprites.draw(self.screen)
+        self.screen.blit(white_clock_text, (st.L_PAD + 635, st.U_PAD + 130))
+        self.screen.blit(black_clock_text, (st.L_PAD + 635, st.U_PAD + 200))
 
         pygame.display.update()
 
     # ^^^^^ Main ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+    # VVVVV Menu VVVVV ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    def startGame(
+            self,
+            time_control: tuple
+    ) -> None:
+        self.state = board.Board((15, 15))
+        self.getPieces()
+        self.in_game = True
+
+
+
+    # ^^^^^ Menu ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
 
     # vvvvv Player Functions vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
@@ -185,16 +209,10 @@ class App(Thread):
     
 
     # vvvvv Sprites vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-    def updateSprites(
-        self
-    ) -> None:
-        self.gui_elements.empty()
-        self.board_sprites.empty()
-        self.piece_sprites.empty()
-        board_render = sprites.Board('tarzan')
-        self.board_sprites.add(board_render)
 
+    def getPieces(
+        self,
+    ) -> None:
         for i, rank in enumerate(self.state.board):
             for j, piece in enumerate(rank):
                 if piece == 0:
@@ -203,9 +221,19 @@ class App(Thread):
                     coords = self.getTopLeft(1, (j, i))
                     render = self.getPieceSprite(piece, coords)
                     self.piece_sprites.add(render)
+
+    def updateSprites(
+        self
+    ) -> None:
+        self.gui_elements.empty()
+        self.board_sprites.empty()
+        self.piece_sprites.empty()
+
+        self.getPieces()
+        
     
-        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 70, st.U_PAD + 620)))
-        self.gui_elements.add(sprites.PlayerClock('default_black', (st.L_PAD + 380, st.U_PAD + 620)))
+        self.board_sprites.add(sprites.menu_list['board'][1])
+        self.gui_elements.add(sprites.menu_list['main menu'][1])
         
 
     def getPieceSprite(

@@ -1,11 +1,13 @@
 import pygame
 
+pygame.mixer.init()
+
 FPS = 60
 
-L_PAD = 100
+L_PAD = 150
 R_PAD = 150
 U_PAD = 75
-D_PAD = 200
+D_PAD = 75
 
 WIDTH = (600 + L_PAD + R_PAD)
 HEIGHT = (600 + U_PAD + D_PAD)
@@ -13,7 +15,6 @@ SCREEN = WIDTH, HEIGHT
 CELL_SIZE = 75
 ROWS = 8
 COLS = 8
-clock = pygame.time.Clock()
 
 # COLORS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 WHITE = (255, 255, 255)
@@ -60,6 +61,9 @@ square_highlight_yellow = pygame.image.load('Assets/Boards/highlight_yellow.png'
 square_highlight_green = pygame.image.load('Assets/Boards/highlight_green.png')
 square_highlight_blue = pygame.image.load('Assets/Boards/highlight_blue.png')
 square_highlight_red = pygame.image.load('Assets/Boards/highlight_red.png')
+
+# AUDIO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+audio_checkmate = pygame.mixer.Sound('Assets/Audio/checkmate_audio.wav')
 
 # BORDERS
 gold_border_150x35 = pygame.image.load('Assets/gold_border.png')
@@ -114,9 +118,12 @@ SQUARE_BOUNDARIES_Y = {
     (board_y_bound[7], board_y_bound[8]): 7
 }
 
-
-print(board_x_bound, SQUARE_BOUNDARIES_X)
-print(board_y_bound, SQUARE_BOUNDARIES_Y)
+results = {
+    'checkmate': 1,
+    'stalemate': 2,
+    'resign': 3,
+    'draw': 4,
+}
 
 # FONTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
