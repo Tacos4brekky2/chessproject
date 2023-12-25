@@ -17,20 +17,21 @@ class App(Thread):
         self._running = True
         self.in_game = False
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.menu = 0
+        self.menu = 1
         self.initial_square = []
         self.perspective = 0
 
         self.gui_elements = pygame.sprite.Group()
         self.piece_sprites = pygame.sprite.Group()
         self.board_sprites = pygame.sprite.Group()
+        self.main_menu = pygame.sprite.Group()
         self.state = object
         self.clock = pygame.time.Clock()
         self.player_clock_font = pygame.font.SysFont('Comic Sans', 30)
         self.white_time = int
         self.black_time = int
-        self.startGame((120, 120))
         self.updateSprites()
+        self.startGame((120, 120))
  
 
     # vvvvv Main vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,26 +86,33 @@ class App(Thread):
 
 
     def render(self) -> None:
-        self.board_sprites.draw(self.screen)
-        white_clock_text = self.player_clock_font.render(str(self.white_time), False, (255, 255, 255))
-        black_clock_text = self.player_clock_font.render(str(self.black_time), False, (255, 255, 255))
+        match self.menu:
+            case 0:
+                self.main_menu.draw(self.screen)
+            case 1:
+                self.board_sprites.draw(self.screen)
+                white_clock_text = self.player_clock_font.render(str(self.white_time), False, (255, 255, 255))
+                black_clock_text = self.player_clock_font.render(str(self.black_time), False, (255, 255, 255))
 
-        highlight_sprites = pygame.sprite.Group()
-        if (len(self.initial_square) == 2):
-            coords = self.getTopLeft(1, (self.initial_square[1], self.initial_square[0]))
-            highlight_sprites.add(sprites.Highlight('yellow', coords))
-        elif self.state.in_check[st.PLAYER_WHITE] == 1:
-            coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_WHITE][1], self.state.king_pos[st.PLAYER_WHITE][0]))
-            highlight_sprites.add(sprites.Highlight('red', coords))
-        elif self.state.in_check[st.PLAYER_BLACK] == 1:
-            coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_BLACK][1], self.state.king_pos[st.PLAYER_BLACK][0]))
-            highlight_sprites.add(sprites.Highlight('red', coords))
+                highlight_sprites = pygame.sprite.Group()
+                if (len(self.initial_square) == 2):
+                    coords = self.getTopLeft(1, (self.initial_square[1], self.initial_square[0]))
+                    highlight_sprites.add(sprites.Highlight('yellow', coords))
+                elif self.state.in_check[st.PLAYER_WHITE] == 1:
+                    coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_WHITE][1], self.state.king_pos[st.PLAYER_WHITE][0]))
+                    highlight_sprites.add(sprites.Highlight('red', coords))
+                elif self.state.in_check[st.PLAYER_BLACK] == 1:
+                    coords = self.getTopLeft(1, (self.state.king_pos[st.PLAYER_BLACK][1], self.state.king_pos[st.PLAYER_BLACK][0]))
+                    highlight_sprites.add(sprites.Highlight('red', coords))
 
-        self.gui_elements.draw(self.screen)
-        highlight_sprites.draw(self.screen)
-        self.piece_sprites.draw(self.screen)
-        self.screen.blit(white_clock_text, (st.L_PAD + 635, st.U_PAD + 130))
-        self.screen.blit(black_clock_text, (st.L_PAD + 635, st.U_PAD + 200))
+                self.gui_elements.draw(self.screen)
+                highlight_sprites.draw(self.screen)
+                self.piece_sprites.draw(self.screen)
+                self.screen.blit(white_clock_text, ((st.WIDTH // 2) - 17, st.HEIGHT - st.U_PAD - 13))
+                self.screen.blit(black_clock_text, ((st.WIDTH // 2) - 17, 8))
+
+                #Menu('button grey', ((st.WIDTH // 2) - 50, 5), (100, 50)),
+                #Menu('button white', ((st.WIDTH // 2) - 50, st.HEIGHT - st.R_PAD + 95), (100, 50)),
 
         pygame.display.update()
 
@@ -225,8 +233,9 @@ class App(Thread):
         self
     ) -> None:
         
-        self.board_sprites.add(sprites.menu_list['board'][1])
-        self.gui_elements.add(sprites.menu_list['main menu'][1])
+        self.main_menu.add(sprites.menu_list[0]['gui assets'])
+        self.board_sprites.add(sprites.menu_list[1]['board assets'])
+        self.gui_elements.add(sprites.menu_list[1]['gui assets'])
         
 
     def getPieceSprites(

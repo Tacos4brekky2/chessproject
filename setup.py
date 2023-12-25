@@ -4,10 +4,10 @@ pygame.mixer.init()
 
 FPS = 60
 
-L_PAD = 150
-R_PAD = 150
-U_PAD = 75
-D_PAD = 75
+L_PAD = 25
+R_PAD = 25
+U_PAD = 60
+D_PAD = 80
 
 WIDTH = (600 + L_PAD + R_PAD)
 HEIGHT = (600 + U_PAD + D_PAD)
@@ -39,6 +39,15 @@ PLAYER_WHITE = 1
 PLAYER_BLACK = -1
 
 # SKINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Menu
+default_menu_box = pygame.image.load('Assets/default_menu_box.png')
+menu_box_purple_long = pygame.image.load('Assets/menu_box_purple_long.png')
+menu_box_red = pygame.image.load('Assets/menu_box_red.png')
+button_red = pygame.image.load('Assets/Buttons/button_red.png')
+button_grey = pygame.image.load('Assets/Buttons/button_grey.png')
+button_white = pygame.image.load('Assets/Buttons/button_white.png')
+trim_bg = pygame.image.load('Assets/trim_grey.png')
+
 # PIECES
 b_bishop = pygame.image.load('Assets/Pieces/black_bishop.png')
 b_king = pygame.image.load('Assets/Pieces/black_king.png')

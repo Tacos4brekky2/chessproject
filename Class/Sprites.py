@@ -5,11 +5,13 @@ import setup as st
 
 
 class Pawn(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             image = st.b_pawn
@@ -32,11 +34,13 @@ class Pawn(pygame.sprite.Sprite):
 
 
 class Bishop(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             self.image = st.b_bishop
@@ -60,11 +64,13 @@ class Bishop(pygame.sprite.Sprite):
 
 
 class Knight(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             self.image = st.b_knight
@@ -88,11 +94,13 @@ class Knight(pygame.sprite.Sprite):
 
 
 class Rook(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             self.image = st.b_rook
@@ -115,11 +123,13 @@ class Rook(pygame.sprite.Sprite):
 
 
 class Queen(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             self.image = st.b_queen
@@ -143,11 +153,13 @@ class Queen(pygame.sprite.Sprite):
 
 
 class King(pygame.sprite.Sprite):
-    def __init__(self, 
-                 color: str, 
-                 coords: tuple,
-                 rank_index: int,
-                 file_index: int):
+    def __init__(
+        self, 
+        color: str, 
+        coords: tuple,
+        rank_index: int,
+        file_index: int
+    ):
         super().__init__()
         if color == 1:
             self.image = st.b_king
@@ -189,7 +201,8 @@ class Board(pygame.sprite.Sprite):
 class Highlight(pygame.sprite.Sprite):
     def __init__(self,
                  skin: str,
-                 coords: tuple):
+                 coords: tuple
+    ):
         super().__init__()
         match skin:
             case 'red':
@@ -212,7 +225,8 @@ class Highlight(pygame.sprite.Sprite):
 class PlayerClock(pygame.sprite.Sprite):
     def __init__(self,
                  skin: str,
-                 coords: tuple) -> None:
+                 coords: tuple
+    ):
         super().__init__()
         match skin:
             case 'default_black':
@@ -222,16 +236,100 @@ class PlayerClock(pygame.sprite.Sprite):
         self.rect.topleft = coords
 
 
+class Menu(pygame.sprite.Sprite):
+    def __init__(self,
+                 skin: str,
+                 coords: tuple,
+                 size: tuple,
+                 rotation=0
+    ):
+        super().__init__()
+        match skin:
+            case 'default menu box':
+                image = st.default_menu_box
+            case 'menu box purple long':
+                image = st.menu_box_purple_long
+            case 'menu box red':
+                image = st.menu_box_red
+            case 'button red':
+                image = st.button_red
+            case 'button white':
+                image = st.button_white
+            case 'button grey':
+                image = st.button_grey
+            case 'trim bg':
+                image = st.trim_bg
+
+        self.image = pygame.transform.scale(image, size)
+        self.image = pygame.transform.rotate(self.image, rotation)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = coords
+
+
+class CapturedPieces(pygame.sprite.Sprite):
+    def __init__(
+            self,
+            skin: str,
+            coords: tuple,
+            size: tuple,
+            color: int,
+            rotation = 0
+    ) -> None:
+        super().__init__()
+        match skin:
+            case 'default':
+                image = st.default_menu_box
+
+        self.image = pygame.transform.scale(image, size)
+        self.image = pygame.transform.rotate(self.image, rotation)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = coords
+        self.color = color
+        self.dict = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+            6: 0,
+        }
+        self.value = 0
+
+    
+    def add_piece(
+            self,
+            piece: int
+    ):
+        self.dict[piece] += 1
+        
+
+
+
 # Menu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 menu_list = {
-    'main menu': [0, [
-        PlayerClock('default_black', (st.L_PAD + 615, st.U_PAD + 135)), 
-        PlayerClock('default_black', (st.L_PAD + 615, st.U_PAD + 205))
-    ]
-],
-    'board': [1, [
-        Board('tarzan')
-    ]
-]
+    0: {
+        'name': 'main menu',
+        'gui assets': [
+            Menu('default menu box', (300, 300), (400, 500))
+        ]
+    },
+    1: {'name': 'board',
+        'board assets': [
+            Board('tarzan')
+        ],
+        'gui assets': [
+            #Menu('menu box purple long', (0, 0), (150, st.HEIGHT // 2.5)),
+            #Menu('menu box purple long', (0, st.HEIGHT - (st.HEIGHT // 2.5)), (150, st.HEIGHT // 2.5), 180),
+            #Menu('default menu box', (st.WIDTH - st.R_PAD, 0), (150, 350)),
+            Menu('button grey', ((st.WIDTH // 2) - 49, 5), (100, 50)),
+            Menu('button white', ((st.WIDTH // 2) - 49, st.HEIGHT - st.D_PAD + 5), (100, 50)),
+            Menu('default menu box', (st.L_PAD - 9, 10), (257, 38)),
+            Menu('default menu box', (st.L_PAD - 9, st.HEIGHT - st.D_PAD + 10), (257, 38)),
+            Menu('trim bg', (-3, -28), (650, 770)),
+            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, 10), (257, 38), -1),
+            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, st.HEIGHT - st.D_PAD + 10), (257, 38), 1)
+            
+        ]
+    }
 }
 # Menu ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
