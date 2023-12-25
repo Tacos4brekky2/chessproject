@@ -4,6 +4,9 @@ import config
 import setup as st
 import os
 from collections import defaultdict
+from threading import Thread
+import time
+import Class.Clock as clk
 
 
 class Board():
@@ -69,8 +72,8 @@ class Board():
             (st.PLAYER_WHITE, 'o-o'): True if 'K' in self.position[9] else False,       # White kingside
             (st.PLAYER_WHITE, 'o-o-o'): True if 'Q' in self.position[9] else False,     # White queenside
             (st.PLAYER_BLACK, 'o-o'): True if 'k' in self.position[9] else False,       # Black kingside
-            (st.PLAYER_BLACK, 'o-o-o'): True if 'q' in self.position[9] else False
-        }     # Black queenside
+            (st.PLAYER_BLACK, 'o-o-o'): True if 'q' in self.position[9] else False      # Black queenside
+        }
         self.board = np.zeros((8, 8))
         self.file_letters = {
             'a': 0, 'b': 1, 'c': 2, 'd': 3,
@@ -82,10 +85,22 @@ class Board():
         }
         self.function_count = defaultdict(int)
         self.en_passant_target = [-1, -1] if self.position[10] == '-' else (self.file_letters[self.position[10][0]], 8 - int(self.position[10][1]))
+        self.clock = {
+            st.PLAYER_WHITE: config.white_time,
+            st.PLAYER_BLACK: config.black_time
+        }
+        self.score = {
+            st.PLAYER_WHITE: 0,
+            st.PLAYER_BLACK: 0
+        }
 
         self.populateBoard()
-        self.startTurn(self.active_color)
+        self.white_clock = clk.PlayerClock(self.clock[1], st.PLAYER_WHITE, daemon=True)
+        self.black_clock = clk.PlayerClock(self.clock[-1], st.PLAYER_BLACK, daemon=True)
+        self.white_clock.start()
+        self.black_clock.start()
 
+        self.startTurn(self.active_color)
 
     def populateBoard(
         self
@@ -412,7 +427,7 @@ class Board():
         """ Switches whose turn it is
     """
         
-        #os.system('clear')
+        os.system('clear')
         print(f'FUNCTION COUNT: {self.function_count}')
         self.function_count = defaultdict(int)
         if color == st.PLAYER_WHITE:
@@ -420,6 +435,12 @@ class Board():
         self.active_color = color
         self.opposite_color = color * -1
         self.legal_moves = self.getLegalMoves(color)
+        if color == st.PLAYER_WHITE:
+            self.black_clock.pause()
+            self.white_clock.resume()
+        else:
+            self.white_clock.pause()
+            self.black_clock.resume()
 
         print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}\nEN-PASSANT TARGET: {self.en_passant_target}')
         if len(self.legal_moves) == 0:

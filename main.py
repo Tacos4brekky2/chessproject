@@ -4,16 +4,19 @@ from pygame.locals import *
 import config as cf
 import setup as st
 import Class.Sprites as sprites
-import Class.Board as brd
+import Class.Board as board
+from threading import Thread
+import tmp
  
 
 
 
-class App:
+class App(Thread):
     def __init__(self):
+        super().__init__()
         self._running = True
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.state = brd.Board(cf.starting_position)
+        self.state = board.Board(cf.starting_position)
         self.initial_square = []
         self.perspective = 0    
         
@@ -41,6 +44,8 @@ class App:
 
 
     def cleanup(self) -> None:
+        self.state.black_clock.stop()
+        self.state.white_clock.stop()
         pygame.quit()
  
     def onEvent(
@@ -211,4 +216,7 @@ class App:
 
 if __name__ == "__main__" :
     pygame.init()
-    App().main()
+    main_thread = App()
+    clock_thread = tmp.clock(seconds=10)
+    main_thread.main()
+    clock_thread.run()
