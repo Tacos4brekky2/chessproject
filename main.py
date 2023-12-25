@@ -6,7 +6,7 @@ import setup as st
 import Class.Sprites as sprites
 import Class.Board as board
 from threading import Thread
-import tmp
+import time
  
 
 
@@ -22,7 +22,8 @@ class App(Thread):
         
         self.piece_sprites = pygame.sprite.Group()
         self.board_sprites = pygame.sprite.Group()
-        self.gui_elements = pygame.sprite.Group()  
+        self.gui_elements = pygame.sprite.Group()
+        self.clock = pygame.time.Clock()
         
         self.updateSprites()
  
@@ -33,12 +34,14 @@ class App(Thread):
         """ Main loop.
     """
         while self._running:
+            #start_time = time.time() # start time of the loop
 
             for event in pygame.event.get():
                 self.onEvent(event)
 
             self.onLoop()
             self.render()
+            #print("FPS: ", 1.0 / (time.time() - start_time)) # FPS = 1 / time to process loop
 
         self.cleanup()
 
@@ -58,14 +61,12 @@ class App(Thread):
                 self._running = False
             case pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
-                if (
-                    (st.L_PAD <= mouse_pos[0] <= (st.L_PAD + st.WIDTH)) and
-                    (st.U_PAD <= mouse_pos[1] <= (st.L_PAD + st.WIDTH))
-                ):
+                if self.getClickedSquare(mouse_pos) != [-1, -1]:
                     self.playerBoardClick(mouse_pos)
 
 
     def onLoop(self) -> None:
+        self.clock.tick(60)
         self.state.clock[st.PLAYER_WHITE] = self.state.player_clock.white_time
         self.state.clock[st.PLAYER_BLACK] = self.state.player_clock.black_time
 
@@ -106,14 +107,17 @@ class App(Thread):
             (self.state.board[square[0]][square[1]] != 0)
         ):
             self.initial_square = square
-        elif (square == self.initial_square):
-            self.initial_square = []
         # Attempt to execute move.
-        else:
+        elif (
+            (len(self.initial_square) == 2) and
+            (square != self.initial_square)    
+        ):
             move = self.state.indexToMove(self.initial_square, square)
             if move in self.state.legal_moves:
                 self.state.movePiece(move)
                 self.updateSprites()
+            self.initial_square = []
+        else:
             self.initial_square = []
 
     # ^^^^^ Player Functions ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,19 +127,23 @@ class App(Thread):
             
     def getClickedSquare(
             self,
-            pos: tuple
+            mouse_pos: tuple
     ) -> list:
         """Returns the board index of a square that was clicked.
     Output = [rank index, file index]
     """
-            
+        
         res = [-1, -1]
-        for i, x in enumerate(st.board_x_bound):
-            if x < pos[0]:
-                res[1] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
-        for i, y in enumerate(st.board_y_bound):
-            if y < pos[1]:
-                res[0] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
+        if (
+            (st.L_PAD <= mouse_pos[0] <= (st.WIDTH - st.R_PAD)) and
+            (st.U_PAD <= mouse_pos[1] <= (st.HEIGHT - st.D_PAD))
+        ):
+            for i, x in enumerate(st.board_x_bound):
+                if x < mouse_pos[0]:
+                    res[1] = st.SQUARE_BOUNDARIES_X[(x, st.board_x_bound[i + 1])]
+            for i, y in enumerate(st.board_y_bound):
+                if y < mouse_pos[1]:
+                    res[0] = st.SQUARE_BOUNDARIES_Y[(y, st.board_y_bound[i + 1])]
         return res
      
 
