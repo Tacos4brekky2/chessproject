@@ -7,7 +7,9 @@ import setup as st
 class Pawn(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             image = st.b_pawn
@@ -16,13 +18,25 @@ class Pawn(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 
 
 class Bishop(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             self.image = st.b_bishop
@@ -31,6 +45,16 @@ class Bishop(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 
 
@@ -38,7 +62,9 @@ class Bishop(pygame.sprite.Sprite):
 class Knight(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             self.image = st.b_knight
@@ -47,6 +73,16 @@ class Knight(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 
 
@@ -54,7 +90,9 @@ class Knight(pygame.sprite.Sprite):
 class Rook(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             self.image = st.b_rook
@@ -63,13 +101,25 @@ class Rook(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 
 
 class Queen(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             self.image = st.b_queen
@@ -78,6 +128,16 @@ class Queen(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 
 
@@ -85,7 +145,9 @@ class Queen(pygame.sprite.Sprite):
 class King(pygame.sprite.Sprite):
     def __init__(self, 
                  color: str, 
-                 coords: tuple):
+                 coords: tuple,
+                 rank_index: int,
+                 file_index: int):
         super().__init__()
         if color == 1:
             self.image = st.b_king
@@ -93,6 +155,16 @@ class King(pygame.sprite.Sprite):
             self.image = st.w_king
 
         self.rect = self.image.get_rect()
+        self.rect.topleft = (coords[0] + 5, coords[1] + 8)
+        self.square = [rank_index, file_index]
+
+    
+    def move(
+        self,
+        target_square: list,
+        coords: tuple
+    ) -> None:
+        self.square = target_square
         self.rect.topleft = (coords[0] + 5, coords[1] + 8)
 
 

@@ -70,7 +70,6 @@ class App(Thread):
                 if self.getClickedSquare(mouse_pos) != [-1, -1]:
                     self.playerBoardClick(mouse_pos)
 
-
     def onLoop(self) -> None:
         self.clock.tick(st.FPS)
         self.state.clock[st.PLAYER_WHITE] = self.state.player_clock.white_time
@@ -79,7 +78,7 @@ class App(Thread):
         self.black_time = self.state.player_clock.black_time
 
         if self.state.final_result == st.results['checkmate']:
-            self.updateSprites()
+            #self.updateSprites()
             pygame.mixer.Sound.play(st.audio_checkmate)
             time.sleep(2)
             self.cleanup()
@@ -119,7 +118,7 @@ class App(Thread):
             time_control: tuple
     ) -> None:
         self.state = board.Board((15, 15))
-        self.getPieces()
+        self.getPieceSprites()
         self.in_game = True
 
 
@@ -147,8 +146,20 @@ class App(Thread):
         ):
             move = self.state.indexToMove(self.initial_square, square)
             if move in self.state.legal_moves:
+                friendly_sprite = [x for x in self.piece_sprites if x.square == [move[2], move[3]]]
+                if (
+                    (abs(move[1]) == st.WHITE_PAWN) and
+                    (self.state.en_passant_target == [move[4] + move[0], move[5]])
+                ):
+                    target_sprite = [x for x in self.piece_sprites if x.square == [move[4] + move[0], move[5]]]
+                else:
+                    target_sprite = [x for x in self.piece_sprites if x.square == [move[4], move[5]]]
+                if len(target_sprite) > 0:
+                    self.piece_sprites.remove(target_sprite[0])
+                coords = self.getTopLeft(1, (move[5], move[4]))
+                friendly_sprite[0].move([move[4], move[5]], coords)
                 self.state.movePiece(move)
-                self.updateSprites()
+
             self.initial_square = []
         else:
             self.initial_square = []
@@ -210,53 +221,38 @@ class App(Thread):
 
     # vvvvv Sprites vvvvv ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def getPieces(
-        self,
-    ) -> None:
-        for i, rank in enumerate(self.state.board):
-            for j, piece in enumerate(rank):
-                if piece == 0:
-                    continue
-                else:
-                    coords = self.getTopLeft(1, (j, i))
-                    render = self.getPieceSprite(piece, coords)
-                    self.piece_sprites.add(render)
-
     def updateSprites(
         self
     ) -> None:
-        self.gui_elements.empty()
-        self.board_sprites.empty()
-        self.piece_sprites.empty()
-
-        self.getPieces()
         
-    
         self.board_sprites.add(sprites.menu_list['board'][1])
         self.gui_elements.add(sprites.menu_list['main menu'][1])
         
 
-    def getPieceSprite(
+    def getPieceSprites(
         self,
-        piece_number: int,
-        position: tuple
-        ) -> object:
-        piece_dict = {
-            -1: sprites.Pawn(1, position),
-            1: sprites.Pawn(0, position),
-            -2: sprites.Bishop(1, position),
-            2: sprites.Bishop(0, position),
-            -3: sprites.Knight(1, position),
-            3: sprites.Knight(0, position),
-            -4: sprites.Rook(1, position),
-            4: sprites.Rook(0, position),
-            -5: sprites.Queen(1, position),
-            5: sprites.Queen(0, position),
-            -6: sprites.King(1, position),
-            6: sprites.King(0, position)
-        }
-        return piece_dict[piece_number]
-    
+     ) -> None:
+        
+        for r, rank in enumerate(self.state.board):
+            for f, piece in enumerate(rank):
+                coords = self.getTopLeft(1, (f, r))
+                piece_dict = {
+                    -1: sprites.Pawn(1, coords, r, f),
+                    1: sprites.Pawn(0, coords, r, f),
+                    -2: sprites.Bishop(1, coords, r, f),
+                    2: sprites.Bishop(0, coords, r, f),
+                    -3: sprites.Knight(1, coords, r, f),
+                    3: sprites.Knight(0, coords, r, f),
+                    -4: sprites.Rook(1, coords, r, f),
+                    4: sprites.Rook(0, coords, r, f),
+                    -5: sprites.Queen(1, coords, r, f),
+                    5: sprites.Queen(0, coords, r, f),
+                    -6: sprites.King(1, coords, r, f),
+                    6: sprites.King(0, coords, r, f)
+                }
+                if piece != 0:
+                    self.piece_sprites.add(piece_dict[piece])
+
     # ^^^^^ Sprites ^^^^^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
