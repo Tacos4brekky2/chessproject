@@ -18,7 +18,10 @@ class App(Thread):
         self.screen = pygame.display.set_mode(st.SCREEN, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.state = board.Board(cf.starting_position)
         self.initial_square = []
-        self.perspective = 0    
+        self.perspective = 0
+        self.clock_font = pygame.font.SysFont('Comic Sans', 30)
+        self.white_time = self.state.clock[st.PLAYER_WHITE]
+        self.black_time = self.state.clock[st.PLAYER_BLACK]
         
         self.piece_sprites = pygame.sprite.Group()
         self.board_sprites = pygame.sprite.Group()
@@ -68,11 +71,15 @@ class App(Thread):
     def onLoop(self) -> None:
         self.clock.tick(60)
         self.state.clock[st.PLAYER_WHITE] = self.state.player_clock.white_time
+        self.white_time = self.state.player_clock.white_time
         self.state.clock[st.PLAYER_BLACK] = self.state.player_clock.black_time
+        self.black_time = self.state.player_clock.black_time
 
 
     def render(self) -> None:
         self.board_sprites.draw(self.screen)
+        white_clock_text = self.clock_font.render(str(self.white_time), False, (255, 255, 255))
+        black_clock_text = self.clock_font.render(str(self.black_time), False, (255, 255, 255))
 
         highlight_sprites = pygame.sprite.Group()
         if (len(self.initial_square) == 2):
@@ -88,6 +95,8 @@ class App(Thread):
 
         self.piece_sprites.draw(self.screen)
         self.gui_elements.draw(self.screen)
+        self.screen.blit(white_clock_text, (st.L_PAD + 130, st.U_PAD + 615))
+        self.screen.blit(black_clock_text, (st.L_PAD + 440, st.U_PAD + 615))
 
         pygame.display.update()
 
