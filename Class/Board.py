@@ -95,10 +95,8 @@ class Board():
         }
 
         self.populateBoard()
-        self.white_clock = clk.PlayerClock(self.clock[1], st.PLAYER_WHITE, daemon=True)
-        self.black_clock = clk.PlayerClock(self.clock[-1], st.PLAYER_BLACK, daemon=True)
-        self.white_clock.start()
-        self.black_clock.start()
+        self.player_clock = clk.PlayerClock(60, st.PLAYER_WHITE)
+        self.player_clock.start()
 
         self.startTurn(self.active_color)
 
@@ -435,12 +433,7 @@ class Board():
         self.active_color = color
         self.opposite_color = color * -1
         self.legal_moves = self.getLegalMoves(color)
-        if color == st.PLAYER_WHITE:
-            self.black_clock.pause()
-            self.white_clock.resume()
-        else:
-            self.white_clock.pause()
-            self.black_clock.resume()
+        self.player_clock.switch()
 
         print(f'ACTIVE COLOR: {self.active_color}\nFIFTYMOVE: {self.fifty_move_count}\nMOVE: {self.move_number}\nEN-PASSANT TARGET: {self.en_passant_target}')
         if len(self.legal_moves) == 0:

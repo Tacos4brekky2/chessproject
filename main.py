@@ -44,8 +44,7 @@ class App(Thread):
 
 
     def cleanup(self) -> None:
-        self.state.black_clock.stop()
-        self.state.white_clock.stop()
+        self.state.player_clock.stop()
         pygame.quit()
  
     def onEvent(
@@ -67,7 +66,9 @@ class App(Thread):
 
 
     def onLoop(self) -> None:
-        pass
+        self.state.clock[st.PLAYER_WHITE] = self.state.player_clock.white_time
+        self.state.clock[st.PLAYER_BLACK] = self.state.player_clock.black_time
+
 
     def render(self) -> None:
         self.board_sprites.draw(self.screen)
@@ -216,7 +217,4 @@ class App(Thread):
 
 if __name__ == "__main__" :
     pygame.init()
-    main_thread = App()
-    clock_thread = tmp.clock(seconds=10)
-    main_thread.main()
-    clock_thread.run()
+    App().main()
