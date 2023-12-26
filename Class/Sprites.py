@@ -315,19 +315,19 @@ menu_list = {
     },
     1: {'name': 'board',
         'board assets': [
-            Board('tarzan')
+            Board('tarzan'),
+            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, 10), (257, 38), -1),
+            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, st.HEIGHT - st.D_PAD + 10), (257, 38), 1)
         ],
         'gui assets': [
             #Menu('menu box purple long', (0, 0), (150, st.HEIGHT // 2.5)),
             #Menu('menu box purple long', (0, st.HEIGHT - (st.HEIGHT // 2.5)), (150, st.HEIGHT // 2.5), 180),
             #Menu('default menu box', (st.WIDTH - st.R_PAD, 0), (150, 350)),
-            Menu('button grey', ((st.WIDTH // 2) - 49, 5), (100, 50)),
-            Menu('button white', ((st.WIDTH // 2) - 49, st.HEIGHT - st.D_PAD + 5), (100, 50)),
             Menu('default menu box', (st.L_PAD - 9, 10), (257, 38)),
             Menu('default menu box', (st.L_PAD - 9, st.HEIGHT - st.D_PAD + 10), (257, 38)),
-            Menu('trim bg', (-3, -28), (650, 770)),
-            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, 10), (257, 38), -1),
-            CapturedPieces('default', (st.WIDTH - st.R_PAD - 245, st.HEIGHT - st.D_PAD + 10), (257, 38), 1)
+            Menu('trim bg', (0, 0), (st.WIDTH, st.HEIGHT)),
+            Menu('button grey', ((st.WIDTH // 2) - 49, 6), (100, 40)),
+            Menu('button white', ((st.WIDTH // 2) - 49, st.HEIGHT - st.D_PAD + 2), (100,40)),
             
         ]
     }

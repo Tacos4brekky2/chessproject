@@ -4,10 +4,10 @@ pygame.mixer.init()
 
 FPS = 60
 
-L_PAD = 25
-R_PAD = 25
-U_PAD = 60
-D_PAD = 80
+L_PAD = 15
+R_PAD = 15
+U_PAD = 55
+D_PAD = 45
 
 WIDTH = (600 + L_PAD + R_PAD)
 HEIGHT = (600 + U_PAD + D_PAD)
@@ -46,7 +46,7 @@ menu_box_red = pygame.image.load('Assets/menu_box_red.png')
 button_red = pygame.image.load('Assets/Buttons/button_red.png')
 button_grey = pygame.image.load('Assets/Buttons/button_grey.png')
 button_white = pygame.image.load('Assets/Buttons/button_white.png')
-trim_bg = pygame.image.load('Assets/trim_grey.png')
+trim_bg = pygame.image.load('Assets/demo_trim.png')
 
 # PIECES
 b_bishop = pygame.image.load('Assets/Pieces/black_bishop.png')

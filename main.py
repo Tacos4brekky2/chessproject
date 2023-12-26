@@ -108,7 +108,7 @@ class App(Thread):
                 self.gui_elements.draw(self.screen)
                 highlight_sprites.draw(self.screen)
                 self.piece_sprites.draw(self.screen)
-                self.screen.blit(white_clock_text, ((st.WIDTH // 2) - 17, st.HEIGHT - st.U_PAD - 13))
+                self.screen.blit(white_clock_text, ((st.WIDTH // 2) - 17, st.HEIGHT - st.U_PAD + 7))
                 self.screen.blit(black_clock_text, ((st.WIDTH // 2) - 17, 8))
 
                 #Menu('button grey', ((st.WIDTH // 2) - 50, 5), (100, 50)),
